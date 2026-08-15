@@ -90,7 +90,7 @@ export class ConfidentialWarrantyClient {
       txHash,
       commitmentHex: commitment,
       daysRequirementMet: this.warrantyDays >= 30,
-      signedBy: "0x3a4b...c8d9 (Midnight Browser Wallet)",
+      signedBy: "0x1AM...c8d9 (Midnight Browser Wallet)",
       txFee: "0.0042",
       txFeeAsset: "tDUST",
     };
