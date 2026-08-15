@@ -1,5 +1,4 @@
 ﻿import type { Metadata } from 'next';
-import Navbar from '../../components/Navbar';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -12,8 +11,7 @@ const CONTRACT_ADDRESS = "0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707
 export default function ExplorerPage() {
   return (
     <>
-      <Navbar />
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
+<div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
         <div style={{ marginBottom: "2rem" }}>
           <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
             <span className="badge badge-cyan">Midnight Explorer</span>

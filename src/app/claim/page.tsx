@@ -1,7 +1,6 @@
 ﻿"use client";
 import { useState } from "react";
 import { getClient } from "../../lib/contract";
-import Navbar from "../../components/Navbar";
 import Link from "next/link";
 
 export default function ClaimPage() {
@@ -78,8 +77,7 @@ export default function ClaimPage() {
 
   return (
     <>
-      <Navbar />
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
+<div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
         <div style={{ marginBottom: "2rem" }}>
           <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
             <span className="badge badge-amber">ZK Warranty Claim</span>

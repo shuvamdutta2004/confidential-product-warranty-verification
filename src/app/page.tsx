@@ -1,5 +1,4 @@
-﻿import Navbar from '../components/Navbar';
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -10,9 +9,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      <Navbar />
-
-      <main>
+<main>
         {/* ── Hero ── */}
         <div className="hero">
           <div className="hero-badge">
