@@ -9,52 +9,55 @@ export default function Navbar() {
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState("");
   const [connecting, setConnecting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleConnectWallet = async () => {
     if (connecting) return;
     setConnecting(true);
+    setErrorMsg("");
 
     try {
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), 3000)
-      );
+      const win = typeof window !== "undefined" ? (window as any) : {};
+      const midnight = win.midnight;
+      const connector = midnight?.mnLace || midnight?.lace || win.cardano?.lace;
 
-      const connectPromise = (async () => {
-        const win = typeof window !== "undefined" ? (window as any) : {};
-        const midnight = win.midnight;
-        const connector = midnight?.mnLace || midnight?.lace || win.cardano?.lace || midnight;
+      if (!connector || typeof connector.enable !== "function") {
+        setErrorMsg("Midnight Lace Extension not found. Please install extension.");
+        alert("Midnight Lace Extension not detected in your browser. Please install or enable Midnight Lace extension.");
+        return;
+      }
 
-        if (connector && typeof connector.enable === "function") {
-          const api = await connector.enable();
-          let addr = "";
-          if (api) {
-            if (typeof api.state === "function") {
-              const st = await api.state();
-              addr = st?.address || st?.account?.address || "";
-            }
-            if (!addr && typeof api.getAccount === "function") {
-              addr = await api.getAccount();
-            }
-            if (!addr && typeof api.accounts === "function") {
-              const accs = await api.accounts();
-              addr = Array.isArray(accs) ? accs[0] : accs;
-            }
-          }
-          if (addr) {
-            const str = String(addr);
-            return str.length > 14 ? `${str.substring(0, 6)}...${str.substring(str.length - 4)}` : str;
-          }
-        }
-        return "0x1AM...c8d9 (Midnight Lace)";
-      })();
+      // Triggers browser extension popup window for explicit user approval
+      const api = await connector.enable();
 
-      const addressResult = (await Promise.race([connectPromise, timeoutPromise])) as string;
+      if (!api) {
+        setErrorMsg("Connection rejected by user.");
+        return;
+      }
+
+      let addr = "";
+      if (typeof api.state === "function") {
+        const st = await api.state();
+        addr = st?.address || st?.account?.address || "";
+      }
+      if (!addr && typeof api.getAccount === "function") {
+        addr = await api.getAccount();
+      }
+      if (!addr && typeof api.accounts === "function") {
+        const accs = await api.accounts();
+        addr = Array.isArray(accs) ? accs[0] : accs;
+      }
+
+      const finalAddr = String(addr || "0x1AM...ApprovedWallet");
+      const formatted = finalAddr.length > 14 ? `${finalAddr.substring(0, 6)}...${finalAddr.substring(finalAddr.length - 4)}` : finalAddr;
+
       setWalletConnected(true);
-      setWalletAddress(addressResult || "0x1AM...c8d9 (Midnight Lace)");
+      setWalletAddress(formatted);
     } catch (e: any) {
-      console.warn("Lace Wallet connection fallback:", e);
-      setWalletConnected(true);
-      setWalletAddress("0x1AM...c8d9 (Midnight Lace)");
+      console.warn("Wallet approval error or cancellation:", e);
+      setErrorMsg(e?.message || "Wallet approval cancelled");
+      setWalletConnected(false);
+      setWalletAddress("");
     } finally {
       setConnecting(false);
     }
@@ -63,6 +66,7 @@ export default function Navbar() {
   const handleDisconnect = () => {
     setWalletConnected(false);
     setWalletAddress("");
+    setErrorMsg("");
   };
 
   return (
@@ -90,9 +94,12 @@ export default function Navbar() {
             </button>
           </div>
         ) : (
-          <button onClick={handleConnectWallet} disabled={connecting} className="btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.82rem" }}>
-            {connecting ? <><span className="spinner" /> Connecting...</> : <><span>👛</span> Connect Wallet</>}
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+            <button onClick={handleConnectWallet} disabled={connecting} className="btn-primary" style={{ padding: "0.45rem 1rem", fontSize: "0.82rem" }}>
+              {connecting ? <><span className="spinner" /> Approving in Extension...</> : <><span>👛</span> Connect Wallet</>}
+            </button>
+            {errorMsg && <span style={{ fontSize: "0.7rem", color: "#fca5a5", marginTop: "0.25rem" }}>{errorMsg}</span>}
+          </div>
         )}
       </div>
     </header>
