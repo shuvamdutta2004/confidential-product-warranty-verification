@@ -1,4 +1,4 @@
-/* --- Base ------------------------------------------------------------------- */
+﻿/* ─── Base ─────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -20,7 +20,7 @@
 
 html, body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
 
-/* --- Gradient Background ---------------------------------------------------- */
+/* ─── Gradient Background ──────────────────────────────────────────────────── */
 body::before {
   content: '';
   position: fixed;
@@ -33,7 +33,7 @@ body::before {
   z-index: 0;
 }
 
-/* --- Navigation ------------------------------------------------------------- */
+/* ─── Navigation ───────────────────────────────────────────────────────────── */
 .nav {
   position: sticky; top: 0; z-index: 100;
   background: rgba(7,10,20,0.85);
@@ -54,10 +54,10 @@ body::before {
 .nav-link:hover { background: rgba(255,255,255,0.06); color: var(--text); }
 .nav-link.active { background: rgba(245,158,11,0.15); color: var(--amber); }
 
-/* --- Layout ----------------------------------------------------------------- */
+/* ─── Layout ───────────────────────────────────────────────────────────────── */
 main { position: relative; z-index: 1; }
 
-/* --- Hero ------------------------------------------------------------------- */
+/* ─── Hero ─────────────────────────────────────────────────────────────────── */
 .hero {
   text-align: center;
   padding: 5rem 1.5rem 4rem;
@@ -82,7 +82,7 @@ main { position: relative; z-index: 1; }
 .hero p { font-size: 1.05rem; color: var(--subtle); line-height: 1.7; max-width: 600px; margin: 0 auto 2.5rem; }
 .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
-/* --- Glass Cards ------------------------------------------------------------ */
+/* ─── Glass Cards ──────────────────────────────────────────────────────────── */
 .glass-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -92,13 +92,13 @@ main { position: relative; z-index: 1; }
 }
 .glass-card:hover { border-color: rgba(255,255,255,0.12); }
 
-/* --- Stat Grid -------------------------------------------------------------- */
+/* ─── Stat Grid ────────────────────────────────────────────────────────────── */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
 .stat-card { padding: 1.25rem; border-radius: 12px; background: rgba(255,255,255,0.025); border: 1px solid var(--border); }
 .stat-value { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; }
 .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
 
-/* --- Badges ----------------------------------------------------------------- */
+/* ─── Badges ───────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-block; padding: 0.2rem 0.65rem; border-radius: 99px;
   font-size: 0.72rem; font-weight: 600;
@@ -110,11 +110,11 @@ main { position: relative; z-index: 1; }
 .badge-rose   { background: rgba(225,29,72,0.15);  color: var(--rose);   border: 1px solid rgba(225,29,72,0.3); }
 .badge-red    { background: rgba(239,68,68,0.15);  color: var(--red);    border: 1px solid rgba(239,68,68,0.3); }
 
-/* --- Section ---------------------------------------------------------------- */
+/* ─── Section ──────────────────────────────────────────────────────────────── */
 .section-title { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; }
 .section-desc  { font-size: 0.92rem; color: var(--subtle); margin-top: 0.5rem; line-height: 1.6; }
 
-/* --- Buttons ---------------------------------------------------------------- */
+/* ─── Buttons ──────────────────────────────────────────────────────────────── */
 .btn-primary {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.65rem 1.4rem; border-radius: 10px;
@@ -136,7 +136,7 @@ main { position: relative; z-index: 1; }
 .btn-secondary:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* --- Form Elements ---------------------------------------------------------- */
+/* ─── Form Elements ────────────────────────────────────────────────────────── */
 input[type="text"],
 input[type="password"],
 input[type="number"],
@@ -156,7 +156,7 @@ input:focus, textarea:focus { border-color: var(--amber); }
 input::placeholder, textarea::placeholder { color: var(--muted); }
 code { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.82em; color: var(--cyan); }
 
-/* --- Log Box ---------------------------------------------------------------- */
+/* ─── Log Box ──────────────────────────────────────────────────────────────── */
 .log-box {
   font-family: 'Consolas', 'Monaco', monospace;
   font-size: 0.78rem;
@@ -173,7 +173,7 @@ code { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.82em; color: v
 .log-success { color: #6ee7b7; }
 .log-error   { color: #fca5a5; }
 
-/* --- Spinner ---------------------------------------------------------------- */
+/* ─── Spinner ──────────────────────────────────────────────────────────────── */
 .spinner {
   display: inline-block;
   width: 14px; height: 14px;
@@ -184,7 +184,7 @@ code { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.82em; color: v
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* --- Fade In ---------------------------------------------------------------- */
+/* ─── Fade In ──────────────────────────────────────────────────────────────── */
 .fade-in { animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
 import Navbar from '../../components/Navbar';
 import Link from 'next/link';
 
@@ -29,7 +29,7 @@ export default function ExplorerPage() {
           <div style={{ marginTop: "1rem" }}>
             <a href={`https://explorer.preview.midnight.network/contracts/${CONTRACT_ADDRESS}`}
               target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: "inline-flex" }}>
-              ?? View on Midnight Explorer ?
+              🔍 View on Midnight Explorer →
             </a>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default function ExplorerPage() {
 
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
           <Link href="/" className="btn-secondary">Back to Dashboard</Link>
-          <Link href="/claim" className="btn-primary">File Warranty Claim ?</Link>
+          <Link href="/claim" className="btn-primary">File Warranty Claim →</Link>
         </div>
       </div>
     </>

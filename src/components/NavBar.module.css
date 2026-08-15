@@ -1,0 +1,60 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,15,0.85);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+}
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+.logo { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.logoIcon { font-size: 1.4rem; }
+.logoText { font-size: 1.1rem; font-weight: 800; color: #f1f5f9; letter-spacing: -0.02em; }
+.logoSub { font-weight: 400; color: #8b5cf6; font-size: 0.85em; }
+.nav { display: flex; align-items: center; gap: 0.25rem; flex: 1; }
+.navLink {
+  padding: 0.4rem 0.875rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #94a3b8;
+  transition: color 0.2s, background 0.2s;
+}
+.navLink:hover { color: #f1f5f9; background: rgba(255,255,255,0.05); }
+.active { color: #a78bfa !important; background: rgba(139,92,246,0.1) !important; }
+.actions { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
+.netPill {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 20px;
+  font-size: 0.75rem; font-weight: 600; color: #a78bfa;
+  background: rgba(139,92,246,0.1);
+}
+.netDot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.hamburger { display: none; flex-direction: column; gap: 4px; background: none; border: none; cursor: pointer; padding: 4px; }
+.hamburger span { display: block; width: 22px; height: 2px; background: #94a3b8; border-radius: 2px; transition: 0.3s; }
+@media (max-width: 768px) {
+  .nav {
+    display: none; position: fixed; inset: 64px 0 0 0;
+    background: rgba(10,10,15,0.97); backdrop-filter: blur(20px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 1rem; z-index: 99;
+  }
+  .navOpen { display: flex; }
+  .hamburger { display: flex; }
+  .netPill { display: none; }
+}

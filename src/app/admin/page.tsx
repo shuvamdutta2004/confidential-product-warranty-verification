@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { getClient } from "../../lib/contract";
 import Navbar from "../../components/Navbar";
@@ -28,8 +28,8 @@ export default function AdminPage() {
     e.preventDefault(); setLoadingMfr(true); setLogs([]); setResult(null);
     try {
       addLog("> [WALLET] Connecting to Midnight Lace Wallet...", "info");
-      addLog("> [ZK WITNESS] manufacturerSigningKey() � derived from private key, never disclosed", "info");
-      addLog(`> [CIRCUIT] Executing setManufacturerCommitment(Uint<32>) � minimumRequiredDays=${mfrMinDays} days...`, "info");
+      addLog("> [ZK WITNESS] manufacturerSigningKey() — derived from private key, never disclosed", "info");
+      addLog(`> [CIRCUIT] Executing setManufacturerCommitment(Uint<32>) — minimumRequiredDays=${mfrMinDays} days...`, "info");
       const client = getClient();
       client.setManufacturerKey(manufacturerKey || "manufacturer_default_signing_key");
       const res = await client.setManufacturerCommitment(mfrMinDays);
@@ -46,8 +46,8 @@ export default function AdminPage() {
     e.preventDefault(); setLoadingRevoke(true); setLogs([]); setResult(null);
     try {
       addLog("> [WALLET] Connecting to Midnight Lace Wallet...", "info");
-      addLog("> [ZK WITNESS] manufacturerSigningKey() � ZK authorization proof generated locally", "info");
-      addLog(`> [CIRCUIT] Executing revokeWarranty(Bytes<32>) � commitment: ${revokeCommitment.substring(0, 20)}...`, "info");
+      addLog("> [ZK WITNESS] manufacturerSigningKey() — ZK authorization proof generated locally", "info");
+      addLog(`> [CIRCUIT] Executing revokeWarranty(Bytes<32>) — commitment: ${revokeCommitment.substring(0, 20)}...`, "info");
       const res = await getClient().revokeWarranty(revokeCommitment);
       setResult({ ...res, circuit: "revokeWarranty(Bytes<32>)" });
       addLog(`> [SUCCESS] Warranty commitment revoked on-chain!`, "success");
@@ -75,7 +75,7 @@ export default function AdminPage() {
     setLoadingSession(true); setLogs([]); setResult(null);
     try {
       addLog("> [WALLET] Connecting to Midnight Lace Wallet...", "info");
-      addLog("> [CIRCUIT] Executing incrementSession() � invalidating stale proofs...", "info");
+      addLog("> [CIRCUIT] Executing incrementSession() — invalidating stale proofs...", "info");
       const res = await getClient().incrementSession();
       setResult({ ...res, circuit: "incrementSession()" });
       addLog(`> [SUCCESS] Session incremented! TxHash: ${res.txHash}`, "success");
@@ -95,11 +95,11 @@ export default function AdminPage() {
           </div>
           <h1 className="section-title" style={{ fontSize: "1.75rem" }}>Manufacturer Admin Console</h1>
           <p className="section-desc">
-            Admin circuits require the manufacturer's private signing key as a ZK witness for authorization. The key is never transmitted � only the derived commitment is verified on-chain.
+            Admin circuits require the manufacturer's private signing key as a ZK witness for authorization. The key is never transmitted — only the derived commitment is verified on-chain.
           </p>
         </div>
 
-        {/* -- Circuit Reference -- */}
+        {/* ── Circuit Reference ── */}
         <div className="glass-card" style={{ padding: "1.25rem", marginBottom: "1.5rem", borderLeft: "3px solid #f59e0b" }}>
           <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#f59e0b", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Manufacturer Admin Circuits</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.5rem" }}>
@@ -117,10 +117,10 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* -- Panel 1: Set Manufacturer Commitment -- */}
+        {/* ── Panel 1: Set Manufacturer Commitment ── */}
         <div className="glass-card" style={{ padding: "1.75rem", marginBottom: "1.25rem", borderLeft: "3px solid #8b5cf6" }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#8b5cf6", marginBottom: "1rem" }}>
-            ?? Panel 1 � setManufacturerCommitment(Uint&lt;32&gt;)
+            🔑 Panel 1 — setManufacturerCommitment(Uint&lt;32&gt;)
           </div>
           <p style={{ fontSize: "0.83rem", color: "#94a3b8", marginBottom: "1rem" }}>
             Anchors the manufacturer's public commitment on-chain and sets the minimum active warranty days requirement for valid claims.
@@ -128,7 +128,7 @@ export default function AdminPage() {
           <form onSubmit={handleSetManufacturer} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
               <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#94a3b8", display: "block", marginBottom: "0.4rem" }}>
-                Manufacturer Private Signing Key (ZK Witness � manufacturerSigningKey())
+                Manufacturer Private Signing Key (ZK Witness — manufacturerSigningKey())
               </label>
               <input type="password" id="manufacturerKey" value={manufacturerKey} onChange={e => setManufacturerKey(e.target.value)}
                 placeholder="Manufacturer private signing key (never transmitted)" autoComplete="off" />
@@ -148,10 +148,10 @@ export default function AdminPage() {
           </form>
         </div>
 
-        {/* -- Panel 2: Revoke Warranty -- */}
+        {/* ── Panel 2: Revoke Warranty ── */}
         <div className="glass-card" style={{ padding: "1.75rem", marginBottom: "1.25rem", borderLeft: "3px solid #ef4444" }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#ef4444", marginBottom: "1rem" }}>
-            ?? Panel 2 � revokeWarranty(Bytes&lt;32&gt;)
+            🚫 Panel 2 — revokeWarranty(Bytes&lt;32&gt;)
           </div>
           <p style={{ fontSize: "0.83rem", color: "#94a3b8", marginBottom: "1rem" }}>
             Revoke or void a specific fraudulent warranty commitment. Requires manufacturer authority proof via <code>manufacturerSigningKey()</code> ZK witness. Stored in <code>lastRevokedCommitment</code>.
@@ -172,10 +172,10 @@ export default function AdminPage() {
           </form>
         </div>
 
-        {/* -- Panel 3: Reset Product -- */}
+        {/* ── Panel 3: Reset Product ── */}
         <div className="glass-card" style={{ padding: "1.75rem", marginBottom: "1.25rem", borderLeft: "3px solid #f59e0b" }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f59e0b", marginBottom: "1rem" }}>
-            ?? Panel 3 � resetProduct(Bytes&lt;32&gt;, Uint&lt;32&gt;)
+            🔄 Panel 3 — resetProduct(Bytes&lt;32&gt;, Uint&lt;32&gt;)
           </div>
           <p style={{ fontSize: "0.83rem", color: "#94a3b8", marginBottom: "1rem" }}>
             Update the active product model ID and adjust minimum active warranty days requirement for new model releases.
@@ -203,10 +203,10 @@ export default function AdminPage() {
           </form>
         </div>
 
-        {/* -- Panel 4: Increment Session -- */}
+        {/* ── Panel 4: Increment Session ── */}
         <div className="glass-card" style={{ padding: "1.5rem", marginBottom: "1.25rem", borderLeft: "3px solid #06b6d4" }}>
           <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#06b6d4", marginBottom: "0.75rem" }}>
-            ?? Panel 4 � incrementSession()
+            🔒 Panel 4 — incrementSession()
           </div>
           <p style={{ fontSize: "0.83rem", color: "#94a3b8", marginBottom: "1rem" }}>
             Bumps the <code>activeSession</code> nonce to invalidate stale proofs from previous epochs.
@@ -227,7 +227,7 @@ export default function AdminPage() {
 
         {result && (
           <div className="glass-card fade-in" style={{ padding: "1.5rem", border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.05)" }}>
-            <p style={{ color: "#6ee7b7", fontWeight: 700, fontSize: "1.05rem", marginBottom: "1rem" }}>? Transaction Confirmed</p>
+            <p style={{ color: "#6ee7b7", fontWeight: 700, fontSize: "1.05rem", marginBottom: "1rem" }}>✅ Transaction Confirmed</p>
             {Object.entries(result).map(([k, v]) => v !== undefined && (
               <div key={k} style={{ display: "flex", gap: "1rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
                 <span style={{ fontSize: "0.8rem", color: "#64748b", minWidth: 160 }}>{k}:</span>
