@@ -143,7 +143,7 @@ CPWV uses Midnight's **dual-state model**: private witnesses computed locally on
 
 ---
 
-## ?? Deployment & Infrastructure
+## 🌐 Deployment & Infrastructure
 
 - **Network**: Midnight Preview Testnet
 - **Proof Server**: Docker `midnightntwrk/proof-server:8.1.0` at `localhost:6300`

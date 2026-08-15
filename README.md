@@ -12,7 +12,7 @@
 
 ---
 
-## ?? What Is CPWV?
+## 🎯 What Is CPWV?
 
 **Confidential Product Warranty Verification (CPWV)** enables consumers to register products, prove active warranty coverage, and file repair or replacement claims **without exposing personal identity, product serial numbers, store receipts, purchase dates, or credit card details** to retailers, manufacturers, or repair centers. Built on Midnight Network's Compact zero-knowledge smart contracts, consumers generate cryptographic ZK proofs locally on their own device. Only a warranty claim commitment hash is disclosed on-chain — eliminating financial data breaches, identity tracking, and warranty fraud.
 
@@ -20,23 +20,23 @@
 
 ---
 
-## ??? Repository & Deployment
+## 🏗️ Repository & Deployment
 
-- ?? **Project Proposal**: [PROPOSAL.md](PROPOSAL.md)
-- ?? **GitHub Repository**: [https://github.com/shuvamdutta2004/confidential-product-warranty-verification](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
-- ?? **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
-- ?? **CI/CD Workflow**: [.github/workflows/ci.yml](.github/workflows/ci.yml)
-- ?? **Midnight Explorer**: [https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c](https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c)
-- ?? **Network**: Midnight Preview Testnet
-- ?? **Contract Address**: `0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c` ? **CONFIRMED**
-- ?? **Preview Node RPC**: `https://rpc.preview.midnight.network`
-- ?? **Preview Indexer**: `https://indexer.preview.midnight.network/api/v4/graphql`
-- ?? **Preview Faucet**: `https://faucet.preview.midnight.network`
-- ?? **Vercel Note**: No `.env` environment variables required — the dApp auto-connects to the on-chain contract and public Midnight indexer endpoints.
+- 📄 **Project Proposal**: [PROPOSAL.md](PROPOSAL.md)
+- 📦 **GitHub Repository**: [https://github.com/shuvamdutta2004/confidential-product-warranty-verification](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
+- 🚀 **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
+- ⚙️ **CI/CD Workflow**: [.github/workflows/ci.yml](.github/workflows/ci.yml)
+- 🌐 **Midnight Explorer**: [https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c](https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c)
+- 📡 **Network**: Midnight Preview Testnet
+- 🔑 **Contract Address**: `0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c` ? **CONFIRMED**
+- 🌐 **Preview Node RPC**: `https://rpc.preview.midnight.network`
+- 📊 **Preview Indexer**: `https://indexer.preview.midnight.network/api/v4/graphql`
+- 💧 **Preview Faucet**: `https://faucet.preview.midnight.network`
+- 💡 **Vercel Note**: No `.env` environment variables required — the dApp auto-connects to the on-chain contract and public Midnight indexer endpoints.
 
 ---
 
-## ?? Platform Screenshots & Verification
+## 📸 Platform Screenshots & Verification
 
 ### 1. Main Dashboard & ZK Contract Architecture
 ![CPWV Main Dashboard](photos/dashboard_main.png)
@@ -55,7 +55,7 @@
 
 ---
 
-## ??? Midnight Privacy Model — What Is and Isn't Revealed
+## 🛡️ Midnight Privacy Model — What Is and Isn't Revealed
 
 ### ? What an Observer CANNOT Learn (Strictly Private)
 
@@ -82,7 +82,7 @@
 
 ---
 
-## ?? Compact Smart Contract (v2)
+## 📜 Compact Smart Contract (v2)
 
 **File:** `contracts/confidential_product_warranty.compact`
 
@@ -171,7 +171,7 @@ export circuit incrementSession(): [] { activeSession.increment(1); }
 
 ---
 
-## ?? Level 2 & Level 3 Verification Checklists
+## 🏆 Level 2 & Level 3 Verification Checklists
 
 ### Level 2 Checklist
 - [x] **Compact Smart Contract**: Written in Compact `v0.23` with 5 private witnesses and 8 public ledger fields.
