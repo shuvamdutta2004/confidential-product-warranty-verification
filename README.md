@@ -2,6 +2,7 @@
 > A privacy-preserving zero-knowledge product authentication & warranty claim dApp built on the Midnight Network using Compact smart contracts.
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-confidential--product--warranty--verification-181717?style=flat-square&logo=github)](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Live_Demo_Video-FF0000?style=flat-square&logo=youtube)](https://youtu.be/nwRXDIlEbtg)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-confidential--product--warranty--verification.vercel.app-000000?style=flat-square&logo=vercel)](https://confidential-product-warranty-verification.vercel.app/)
 [![CI/CD Pipeline](https://github.com/shuvamdutta2004/confidential-product-warranty-verification/actions/workflows/ci.yml/badge.svg)](https://github.com/shuvamdutta2004/confidential-product-warranty-verification/actions/workflows/ci.yml)
 [![Midnight Network](https://img.shields.io/badge/Network-Midnight_Preview-8b5cf6?style=flat-square)](https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c)
@@ -20,11 +21,20 @@
 
 ---
 
+## 🎥 Live Demo Video
+
+[![CPWV Video Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Live%20Demo%20Video-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/nwRXDIlEbtg)
+
+📺 **Watch on YouTube**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg)
+
+---
+
 ## 🏗️ Repository & Deployment
 
 - 📄 **Project Proposal**: [PROPOSAL.md](PROPOSAL.md)
 - 📦 **GitHub Repository**: [https://github.com/shuvamdutta2004/confidential-product-warranty-verification](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
 - 🚀 **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
+- 🎥 **YouTube Video Walkthrough**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg): [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
 - ⚙️ **CI/CD Workflow**: [.github/workflows/ci.yml](.github/workflows/ci.yml)
 - 🌐 **Midnight Explorer**: [https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c](https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c)
 - 📡 **Network**: Midnight Preview Testnet
@@ -39,25 +49,25 @@
 ## 📸 Platform Screenshots & Verification
 
 ### 1. Main Dashboard & ZK Contract Architecture
-![CPWV Main Dashboard](photos/dashboard_main.png)
+![CPWV Main Dashboard](photos/main_dashboard.png)
 
 ### 2. Consumer Warranty Claim & ZK Proof Portal
-![Consumer Warranty Claim Portal](photos/warranty_claim.png)
+![Consumer Warranty Claim Portal](photos/claim_side.png)
 
 ### 3. Manufacturer Admin Console & Property Management
-![Manufacturer Admin Console](photos/admin_side.png)
+![Manufacturer Admin Console](photos/admin_panel.png)
 
 ### 4. Mobile Responsive UI & Lace Wallet Connector
-![Mobile Responsive UI](photos/ui_mobile.png)
+![Mobile Responsive UI](photos/mobile_ui.png)
 
 ### 5. On-Chain Execution & Vitest Test Verification Log (10/10)
-![Vitest Test Verification Log](photos/test_run.png)
+![Vitest Test Verification Log](photos/test-run.png)
 
 ---
 
 ## 🛡️ Midnight Privacy Model — What Is and Isn't Revealed
 
-### ? What an Observer CANNOT Learn (Strictly Private)
+### ❌ What an Observer CANNOT Learn (Strictly Private)
 
 | Private Data | ZK Witness | Location |
 |---|---|---|
@@ -67,7 +77,7 @@
 | Entropy Salt Nonce | `warrantyProofNonce()` | Local device only |
 | Manufacturer Private Signing Key | `manufacturerSigningKey()` | Derived on-device for ZK auth — never transmitted |
 
-### ? What an Observer CAN Learn (Public Ledger)
+### ✅ What an Observer CAN Learn (Public Ledger)
 
 | Public Data | Ledger Field | Type | Description |
 |---|---|---|---|
@@ -188,4 +198,5 @@ export circuit incrementSession(): [] { activeSession.increment(1); }
 - [x] **Browser Proof Generation**: Client-side ZK proof generation and Midnight Lace wallet connector.
 - [x] **On-Chain Midnight Preview Deployment**: [Midnight Explorer](https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c).
 - [x] **Live Vercel Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/).
+- [x] **YouTube Live Demo Walkthrough**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg).: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/).
 

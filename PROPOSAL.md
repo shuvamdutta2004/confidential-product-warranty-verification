@@ -143,6 +143,10 @@ CPWV uses Midnight's **dual-state model**: private witnesses computed locally on
 
 ---
 
+## 🎥 Live Demo Video
+
+- **YouTube Walkthrough**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg)
+
 ## 🌐 Deployment & Infrastructure
 
 - **Network**: Midnight Preview Testnet
