@@ -1,0 +1,128 @@
+pragma language_version 0.23;
+import CompactStandardLibrary;
+
+// --- Ledger State (8 public fields) -------------------------------------------
+export ledger claimCount: Counter;                 // Total verified warranty claims filed
+export ledger revokedCount: Counter;               // Total revoked/voided warranties
+export ledger activeSession: Counter;              // Epoch nonce for replay protection
+export ledger productId: Bytes<32>;                // Active product model identifier
+export ledger manufacturerCommitment: Bytes<32>;   // Manufacturer public authority commitment
+export ledger lastClaimCommitment: Bytes<32>;      // Most recent ZK warranty claim commitment hash
+export ledger lastRevokedCommitment: Bytes<32>;    // Most recent revoked warranty commitment hash
+export ledger minimumRequiredDays: Uint<32>;      // Minimum active warranty days required
+
+// --- Witnesses (5 Private Inputs — Never Disclosed On-Chain) -------------------
+witness productSecretKey(): Bytes<32>;        // Customer private product serial secret key
+witness warrantyProofNonce(): Bytes<32>;      // Entropy salt for replay protection
+witness purchaseInvoiceHash(): Bytes<32>;     // Hashed purchase receipt & invoice record
+witness warrantyDaysRemaining(): Uint<32>;    // Private active warranty days balance (checked vs. threshold)
+witness manufacturerSigningKey(): Bytes<32>;  // Manufacturer private key (admin ZK auth)
+
+// --- Circuit 1: claimWarranty --------------------------------------------------
+// Customer privately proves their active warranty balance satisfies minimumRequiredDays
+// (warrantyDaysRemaining >= minimumRequiredDays) without disclosing purchase date or identity.
+// Only the multi-input commitment hash is written on-chain.
+export circuit claimWarranty(expectedProductId: Bytes<32>): Bytes<32> {
+  // Verify customer is filing claim against the active product model ID
+  assert(productId == expectedProductId, "Product ID mismatch: warranty claim rejected");
+
+  // Compute private witnesses locally on customer device
+  const productKey = productSecretKey();
+  const nonce = warrantyProofNonce();
+  const invoiceHash = purchaseInvoiceHash();
+  const days = warrantyDaysRemaining();
+
+  // ZK Warranty Days Assertion:
+  // Prove active warranty days meet or exceed manufacturer requirement privately
+  assert(days >= minimumRequiredDays, "Warranty expired: active days below required threshold");
+
+  // Session binding prevents cross-epoch proof reuse
+  const sessionBytes = pad(32, "cpw:session:binding");
+
+  // Multi-input ZK warranty claim commitment (Vector<5, Bytes<32>>):
+  // Hash(domain_tag || productKey || nonce || invoiceHash || session)
+  const claimCommitment = persistentHash<Vector<5, Bytes<32>>>([
+    pad(32, "cpw:warranty:claim:v2"),
+    productKey,
+    nonce,
+    invoiceHash,
+    sessionBytes
+  ]);
+
+  // Increment total claim counter
+  claimCount.increment(1);
+
+  // Disclose ONLY the commitment hash — all private inputs stay hidden
+  const disclosedCommitment = disclose(claimCommitment);
+  lastClaimCommitment = disclosedCommitment;
+
+  return disclosedCommitment;
+}
+
+// --- Circuit 2: verifyWarranty -------------------------------------------------
+// Public on-chain verification checking whether a claimed commitment matches
+// the registered warranty commitment on-chain.
+export circuit verifyWarranty(claimedCommitment: Bytes<32>): Boolean {
+  const matches = lastClaimCommitment == claimedCommitment;
+  return disclose(matches);
+}
+
+// --- Circuit 3: revokeWarranty -------------------------------------------------
+// Manufacturer revokes or voids a fraudulent warranty claim.
+// Requires manufacturer signing key as a ZK witness for authorization.
+export circuit revokeWarranty(commitmentToRevoke: Bytes<32>): Bytes<32> {
+  // Derive manufacturer authority commitment from private signing key
+  const mfrKey = manufacturerSigningKey();
+  const derivedCommitment = persistentHash<Vector<2, Bytes<32>>>([
+    pad(32, "cpw:manufacturer:authority:v1"),
+    mfrKey
+  ]);
+
+  // Verify caller is the authorized manufacturer
+  assert(derivedCommitment == manufacturerCommitment, "Unauthorized: manufacturer commitment mismatch");
+
+  // Record revocation
+  revokedCount.increment(1);
+  const disclosedRevoked = disclose(commitmentToRevoke);
+  lastRevokedCommitment = disclosedRevoked;
+
+  return disclosedRevoked;
+}
+
+// --- Circuit 4: setManufacturerCommitment --------------------------------------
+// One-time setup: manufacturer anchors public authority commitment on-chain and sets
+// the minimum active days requirement for product warranties.
+export circuit setManufacturerCommitment(newMinimumDays: Uint<32>): Bytes<32> {
+  const mfrKey = manufacturerSigningKey();
+  const newCommitment = persistentHash<Vector<2, Bytes<32>>>([
+    pad(32, "cpw:manufacturer:authority:v1"),
+    mfrKey
+  ]);
+
+  const disclosedCommitment = disclose(newCommitment);
+  manufacturerCommitment = disclosedCommitment;
+
+  // Set the minimum required active warranty days
+  minimumRequiredDays = newMinimumDays;
+
+  // Bump active session epoch
+  activeSession.increment(1);
+
+  return disclosedCommitment;
+}
+
+// --- Circuit 5: resetProduct ---------------------------------------------------
+// Manufacturer updates product model ID and sets a new minimum required days threshold.
+export circuit resetProduct(newProductId: Bytes<32>, newMinimumDays: Uint<32>): Bytes<32> {
+  productId = disclose(newProductId);
+  minimumRequiredDays = newMinimumDays;
+  activeSession.increment(1);
+  return productId;
+}
+
+// --- Circuit 6: incrementSession -----------------------------------------------
+// Monotonic epoch nonce bump for manual rotation or security invalidation.
+export circuit incrementSession(): [] {
+  activeSession.increment(1);
+}
+

@@ -1,0 +1,62 @@
+pragma language_version 0.23;
+import CompactStandardLibrary;
+
+export ledger claimCount: Counter;
+export ledger revokedCount: Counter;
+export ledger activeSession: Counter;
+export ledger productId: Bytes<32>;
+export ledger manufacturerCommitment: Bytes<32>;
+export ledger lastClaimCommitment: Bytes<32>;
+export ledger lastRevokedCommitment: Bytes<32>;
+export ledger minimumRequiredDays: Uint<32>;
+
+witness productSecretKey(): Bytes<32>;
+witness warrantyProofNonce(): Bytes<32>;
+witness purchaseInvoiceHash(): Bytes<32>;
+witness warrantyDaysRemaining(): Uint<32>;
+witness manufacturerSigningKey(): Bytes<32>;
+
+export circuit claimWarranty(expectedProductId: Bytes<32>): Bytes<32> {
+  assert(productId == expectedProductId, "Product ID mismatch");
+  const productKey = productSecretKey();
+  const nonce = warrantyProofNonce();
+  const invoiceHash = purchaseInvoiceHash();
+  const days = warrantyDaysRemaining();
+  assert(days >= minimumRequiredDays, "Warranty expired");
+  const claimCommitment = persistentHash<Vector<5, Bytes<32>>>([
+    pad(32, "cpw:warranty:claim:v2"),
+    productKey, nonce, invoiceHash, pad(32, "cpw:session:binding")
+  ]);
+  claimCount.increment(1);
+  lastClaimCommitment = disclose(claimCommitment);
+  return lastClaimCommitment;
+}
+
+export circuit verifyWarranty(claimedCommitment: Bytes<32>): Boolean {
+  return disclose(lastClaimCommitment == claimedCommitment);
+}
+
+export circuit revokeWarranty(commitmentToRevoke: Bytes<32>): Bytes<32> {
+  const mfrKey = manufacturerSigningKey();
+  assert(persistentHash<Vector<2, Bytes<32>>>([pad(32, "cpw:manufacturer:authority:v1"), mfrKey]) == manufacturerCommitment, "Unauthorized");
+  revokedCount.increment(1);
+  lastRevokedCommitment = disclose(commitmentToRevoke);
+  return lastRevokedCommitment;
+}
+
+export circuit setManufacturerCommitment(newMinimumDays: Uint<32>): Bytes<32> {
+  manufacturerCommitment = disclose(persistentHash<Vector<2, Bytes<32>>>([pad(32, "cpw:manufacturer:authority:v1"), manufacturerSigningKey()]));
+  minimumRequiredDays = newMinimumDays;
+  activeSession.increment(1);
+  return manufacturerCommitment;
+}
+
+export circuit resetProduct(newProductId: Bytes<32>, newMinimumDays: Uint<32>): Bytes<32> {
+  productId = disclose(newProductId);
+  minimumRequiredDays = newMinimumDays;
+  activeSession.increment(1);
+  return productId;
+}
+
+export circuit incrementSession(): [] { activeSession.increment(1); }
+
