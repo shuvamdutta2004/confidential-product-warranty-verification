@@ -1,4 +1,4 @@
-﻿# Project Proposal: Confidential Product Warranty Verification (CPWV)
+# Project Proposal: Confidential Product Warranty Verification (CPWV)
 
 > **Zero-Knowledge Product Authentication, Warranty Claim & Proof Protocol on Midnight Network**
 
@@ -9,7 +9,7 @@
 
 ---
 
-## ? Question 1: What is the project about?
+## ❓ Question 1: What is the project about?
 
 **Confidential Product Warranty Verification (CPWV)** is a privacy-preserving decentralized application (dApp) built on the **Midnight Network** utilizing **Compact zero-knowledge (ZK) smart contracts**. CPWV enables consumers to register products, prove warranty coverage, and file repair or replacement claims **without exposing personal identity, exact purchase dates, invoice details, bank transaction records, or product serial keys** to retailers, manufacturers, or third-party repair centers.
 
@@ -23,7 +23,7 @@ The smart contract (`contracts/confidential_product_warranty.compact`) implement
 
 ---
 
-## ? Question 2: What problem does it solve?
+## ❓ Question 2: What problem does it solve?
 
 ### The Privacy & Fraud Crisis in Product Warranties
 
@@ -50,7 +50,7 @@ The smart contract (`contracts/confidential_product_warranty.compact`) implement
 
 ---
 
-## ? Question 3: How does the Midnight ZK architecture work?
+## ❓ Question 3: How does the Midnight ZK architecture work?
 
 ### Compact Smart Contract Design (`contracts/confidential_product_warranty.compact`)
 
@@ -107,7 +107,7 @@ CPWV uses Midnight's **dual-state model**: private witnesses computed locally on
 
 ---
 
-## ? Question 4: What are the privacy guarantees and threat model?
+## ❓ Question 4: What are the privacy guarantees and threat model?
 
 ### What an Observer CANNOT Learn (Strictly Private)
 
