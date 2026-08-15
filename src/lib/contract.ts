@@ -1,4 +1,4 @@
-﻿export const CONTRACT_ADDRESS = "0x8f2a10b49c716382046175c04251c305868219682427253c06a6f538fab09a2e";
+﻿export const CONTRACT_ADDRESS = "0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c";
 
 export interface ClaimResult {
   txHash: string;

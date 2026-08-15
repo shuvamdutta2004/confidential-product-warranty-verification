@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'View live on-chain state of the Confidential Product Warranty Verification contract on Midnight Preview.',
 };
 
-const CONTRACT_ADDRESS = "0x8f2a10b49c716382046175c04251c305868219682427253c06a6f538fab09a2e";
+const CONTRACT_ADDRESS = "0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c";
 
 export default function ExplorerPage() {
   return (
@@ -27,7 +27,7 @@ export default function ExplorerPage() {
           <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#64748b", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Contract Address</div>
           <code style={{ fontSize: "0.82rem", color: "#06b6d4", wordBreak: "break-all" }}>{CONTRACT_ADDRESS}</code>
           <div style={{ marginTop: "1rem" }}>
-            <a href={`https://explorer.preview.midnight.network/contracts/${CONTRACT_ADDRESS}`}
+            <a href={`https://preview.midnightexplorer.com/contracts/${CONTRACT_ADDRESS}`}
               target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: "inline-flex" }}>
               🔍 View on Midnight Explorer →
             </a>

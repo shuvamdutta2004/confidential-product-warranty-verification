@@ -92,7 +92,7 @@ export default function HomePage() {
           {/* ── Action Links ── */}
           <div className="glass-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <a href="https://explorer.preview.midnight.network/contracts/0x8f2a10b49c716382046175c04251c305868219682427253c06a6f538fab09a2e"
+              <a href="https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c"
                 target="_blank" rel="noopener noreferrer" className="btn-secondary">
                 🔍 Midnight Explorer
               </a>

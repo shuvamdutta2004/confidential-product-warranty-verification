@@ -1,8 +1,8 @@
-# Project Proposal: Confidential Product Warranty Verification (CPWV)
+ï»¿# Project Proposal: Confidential Product Warranty Verification (CPWV)
 
 > **Zero-Knowledge Product Authentication, Warranty Claim & Proof Protocol on Midnight Network**
 
-[![Midnight Network](https://img.shields.io/badge/Network-Midnight_Preview-8b5cf6?style=flat-square)](https://explorer.preview.midnight.network)
+[![Midnight Network](https://img.shields.io/badge/Network-Midnight_Preview-8b5cf6?style=flat-square)](https://preview.midnightexplorer.com)
 [![Compact Language](https://img.shields.io/badge/Compact-v0.23-e11d48?style=flat-square)](https://midnight.network)
 [![Framework](https://img.shields.io/badge/Framework-Next.js_14-black?style=flat-square&logo=nextdotjs)](https://nextjs.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -41,12 +41,12 @@ The smart contract (`contracts/confidential_product_warranty.compact`) implement
 
 | Problem | CPWV Solution |
 |---|---|
-| Identity & serial leaks | `productSecretKey()` witness — calculated locally on consumer device, never disclosed |
-| Purchase & invoice exposure | `purchaseInvoiceHash()` — SHA-256 hashed locally before ZK proof generation |
-| Expired claim fraud | `warrantyDaysRemaining()` witness — compared privately to requirement (`assert(days >= minimumRequiredDays)`) |
+| Identity & serial leaks | `productSecretKey()` witness â€” calculated locally on consumer device, never disclosed |
+| Purchase & invoice exposure | `purchaseInvoiceHash()` â€” SHA-256 hashed locally before ZK proof generation |
+| Expired claim fraud | `warrantyDaysRemaining()` witness â€” compared privately to requirement (`assert(days >= minimumRequiredDays)`) |
 | Serial replay fraud | `warrantyProofNonce()` + `activeSession` epoch counter binding |
 | Unauthorized revocation | `revokeWarranty()` circuit with ZK manufacturer authority proof |
-| Product model spoofing | `manufacturerCommitment` anchor — `setManufacturerCommitment()` circuit |
+| Product model spoofing | `manufacturerCommitment` anchor â€” `setManufacturerCommitment()` circuit |
 
 ---
 
@@ -69,7 +69,7 @@ CPWV uses Midnight's **dual-state model**: private witnesses computed locally on
 | `lastRevokedCommitment` | `Bytes<32>` | Most recent revoked commitment hash |
 | `minimumRequiredDays` | `Uint<32>` | Minimum active warranty days required |
 
-#### Witnesses (5 private inputs — never disclosed)
+#### Witnesses (5 private inputs â€” never disclosed)
 
 | Witness | Type | Purpose |
 |---|---|---|
@@ -84,11 +84,11 @@ CPWV uses Midnight's **dual-state model**: private witnesses computed locally on
 | Circuit | Inputs | Witnesses Used | Business Logic |
 |---|---|---|---|
 | `claimWarranty` | `Bytes<32>` productId | productSecretKey, warrantyProofNonce, purchaseInvoiceHash, warrantyDaysRemaining | ZK warranty claim with private active days threshold assertion |
-| `verifyWarranty` | `Bytes<32>` commitment | — | Public on-chain commitment verification |
-| `revokeWarranty` | `Bytes<32>` commitment | manufacturerSigningKey | Revoke a fraudulent claim — ZK manufacturer authority required |
+| `verifyWarranty` | `Bytes<32>` commitment | â€” | Public on-chain commitment verification |
+| `revokeWarranty` | `Bytes<32>` commitment | manufacturerSigningKey | Revoke a fraudulent claim â€” ZK manufacturer authority required |
 | `setManufacturerCommitment` | `Uint<32>` threshold | manufacturerSigningKey | Anchor manufacturer authority + set active days threshold |
-| `resetProduct` | `Bytes<32>`, `Uint<32>` | — | New product epoch with updated days threshold |
-| `incrementSession` | — | — | Bump session nonce (replay protection) |
+| `resetProduct` | `Bytes<32>`, `Uint<32>` | â€” | New product epoch with updated days threshold |
+| `incrementSession` | â€” | â€” | Bump session nonce (replay protection) |
 
 #### ZK Privacy Flow
 
@@ -113,17 +113,17 @@ CPWV uses Midnight's **dual-state model**: private witnesses computed locally on
 
 | Sensitive Data | Protected By | Guarantee |
 |---|---|---|
-| Consumer identity & address | `productSecretKey()` ZK witness | Never transmitted — local device only |
-| Exact purchase date & invoice | `purchaseInvoiceHash()` ZK witness | SHA-256 hashed locally — only hash in proof |
-| Active warranty days balance | `warrantyDaysRemaining()` ZK witness | Compared privately to threshold — balance never disclosed |
-| Entropy/nonce | `warrantyProofNonce()` ZK witness | Per-claim entropy — replay-resistant |
-| Manufacturer signing key | `manufacturerSigningKey()` ZK witness | Derived locally for authorization — key never on-chain |
+| Consumer identity & address | `productSecretKey()` ZK witness | Never transmitted â€” local device only |
+| Exact purchase date & invoice | `purchaseInvoiceHash()` ZK witness | SHA-256 hashed locally â€” only hash in proof |
+| Active warranty days balance | `warrantyDaysRemaining()` ZK witness | Compared privately to threshold â€” balance never disclosed |
+| Entropy/nonce | `warrantyProofNonce()` ZK witness | Per-claim entropy â€” replay-resistant |
+| Manufacturer signing key | `manufacturerSigningKey()` ZK witness | Derived locally for authorization â€” key never on-chain |
 
 ### What an Observer CAN Learn (Public Ledger)
 
 | Public Data | Ledger Field | Rationale |
 |---|---|---|
-| Total filed claims | `claimCount` | Auditability & service metric — no user attribution |
+| Total filed claims | `claimCount` | Auditability & service metric â€” no user attribution |
 | Active product model ID | `productId` | Consumers must know which product model is active |
 | Most recent claim hash | `lastClaimCommitment` | Repair centers use `verifyWarranty()` to check claims |
 | Total revocations | `revokedCount` | Transparency for voided warranties |
@@ -155,10 +155,10 @@ CPWV uses Midnight's **dual-state model**: private witnesses computed locally on
 
 ## ??? Level 3 Compliance Checklist
 
-- [x] **Rich Contract Logic (v2)**: 6 circuits, 8 ledger fields, 5 witnesses — ZK warranty days assertion, claim revocation, manufacturer authority.
+- [x] **Rich Contract Logic (v2)**: 6 circuits, 8 ledger fields, 5 witnesses â€” ZK warranty days assertion, claim revocation, manufacturer authority.
 - [x] **Compact Smart Contract**: Written in `Compact v0.23` with `persistentHash`, `disclose`, `assert`, Counter, and `Uint<32>` types.
 - [x] **Managed Contract Output**: Pre-compiled `managed/contract/index.js` + `index.d.ts` with full TypeScript type bindings.
-- [x] **Vitest Unit Test Suite**: 10/10 tests passing — covers circuit structure, witness isolation, warranty days qualification, ZK privacy, mfr auth.
+- [x] **Vitest Unit Test Suite**: 10/10 tests passing â€” covers circuit structure, witness isolation, warranty days qualification, ZK privacy, mfr auth.
 - [x] **CI Pipeline**: GitHub Actions verifies Compact source, managed output, runs tests, and builds Next.js on every push.
 - [x] **Next.js 14 App Router UI**: Full dApp with ZK architecture diagrams, warranty days slider, verify/revoke panels.
 - [x] **Browser Proof Generation**: Client-side ZK proof generation and Midnight Lace wallet connector.
