@@ -1,7 +1,7 @@
 {
   "name": "confidential-product-warranty-verification",
   "version": "2.0.0",
-  "description": "Confidential Product Warranty Verification (CPWV) - ZK warranty claim & product authentication dApp on Midnight Network.",
+  "description": "Confidential Product Warranty Verification (CPWV) — Privacy-preserving ZK product authentication and warranty claim dApp on Midnight Network",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,7 +11,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@midnight-ntwrk/compact-runtime": "^0.16.0",
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@midnight-ntwrk/dapp-connector-api": "4.0.1",
+    "@midnight-ntwrk/midnight-js-contracts": "4.1.1",
+    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-network-id": "4.1.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-protocol": "4.1.1",
+    "@midnight-ntwrk/midnight-js-types": "4.1.1",
+    "@midnight-ntwrk/midnight-js-utils": "4.1.1",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18"
