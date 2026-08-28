@@ -1,170 +1,115 @@
 # Project Proposal: Confidential Product Warranty Verification (CPWV)
-
-> **Zero-Knowledge Product Authentication, Warranty Claim & Proof Protocol on Midnight Network**
-
-[![Midnight Network](https://img.shields.io/badge/Network-Midnight_Preview-8b5cf6?style=flat-square)](https://preview.midnightexplorer.com)
-[![Compact Language](https://img.shields.io/badge/Compact-v0.23-e11d48?style=flat-square)](https://midnight.network)
-[![Framework](https://img.shields.io/badge/Framework-Next.js_14-black?style=flat-square&logo=nextdotjs)](https://nextjs.org)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+> Privacy-Preserving Zero-Knowledge Product Authentication & Warranty Claim Protocol on Midnight Network
 
 ---
 
-## ❓ Question 1: What is the project about?
+## Live Demo Video
 
-**Confidential Product Warranty Verification (CPWV)** is a privacy-preserving decentralized application (dApp) built on the **Midnight Network** utilizing **Compact zero-knowledge (ZK) smart contracts**. CPWV enables consumers to register products, prove warranty coverage, and file repair or replacement claims **without exposing personal identity, exact purchase dates, invoice details, bank transaction records, or product serial keys** to retailers, manufacturers, or third-party repair centers.
+> **Demonstrates wallet connect + successful claimWarranty() circuit call from the frontend.**
 
-Traditional warranty claim processes force consumers into invasive data submission pipelines: customers must upload unencrypted purchase receipts, credit card statements, and personal identity documents to centralized databases. These databases are frequent targets of data breaches, marketing telemetry harvesting, and serial number spoofing. CPWV replaces this model with a ZK architecture where:
+[![CPWV Video Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Live%20Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/nwRXDIlEbtg)
 
-- **Private proofs are generated client-side inside the consumer's browser**
-- **Only a cryptographic warranty claim commitment hash is written to the Midnight chain**
-- **No raw serial numbers, personal identity attributes, or purchase receipts touch the network**
-
-The smart contract (`contracts/confidential_product_warranty.compact`) implements 6 circuits that cover the complete product lifecycle: warranty claiming, public claim verification, manufacturer warranty revocation, manufacturer authority setup, product model rotation, and session management.
+**Watch on YouTube**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg)
 
 ---
 
-## ❓ Question 2: What problem does it solve?
+## Question 1: What is the application?
 
-### The Privacy & Fraud Crisis in Product Warranties
+**Confidential Product Warranty Verification (CPWV)** is a decentralized, privacy-preserving product authentication and warranty claim platform built on the Midnight Network using Compact zero-knowledge smart contracts and the **Midnight.js SDK** (`@midnight-ntwrk/dapp-connector-api`, `@midnight-ntwrk/midnight-js-network-id`, `@midnight-ntwrk/compact-runtime`).
 
-1. **Mass Over-Disclosure of Consumer Data**: Customers are forced to hand over store receipts, credit card details, residential addresses, and phone numbers to process simple warranty repairs or replacements.
-
-2. **Centralized Receipt & Serial Breaches**: Retailer databases storing customer invoices and product serial numbers are prime targets for ransomware, identity theft, and counterfeit serial harvesting.
-
-3. **Warranty & Serial Spoofing Fraud**: Malicious actors harvest exposed serial numbers to file fraudulent warranty replacement claims on non-existent or out-of-warranty items.
-
-4. **Lack of Anti-Replay Protection**: Without ZK commitment binding and session nonces, stolen static proof documents can be reused across multiple repair providers.
-
-5. **No Trustless Warranty Revocation**: Manufacturers lack a privacy-preserving mechanism to void or revoke fraudulent claims on-chain without exposing private customer registries.
-
-### How CPWV Solves This
-
-| Problem | CPWV Solution |
-|---|---|
-| Identity & serial leaks | `productSecretKey()` witness — calculated locally on consumer device, never disclosed |
-| Purchase & invoice exposure | `purchaseInvoiceHash()` — SHA-256 hashed locally before ZK proof generation |
-| Expired claim fraud | `warrantyDaysRemaining()` witness — compared privately to requirement (`assert(days >= minimumRequiredDays)`) |
-| Serial replay fraud | `warrantyProofNonce()` + `activeSession` epoch counter binding |
-| Unauthorized revocation | `revokeWarranty()` circuit with ZK manufacturer authority proof |
-| Product model spoofing | `manufacturerCommitment` anchor — `setManufacturerCommitment()` circuit |
+Consumers prove active warranty coverage without revealing their serial numbers, store receipts, purchase dates, or personal identity. Manufacturers anchor product authority and configure warranty thresholds. The entire product authentication and warranty claim flow is executed as ZK circuit proofs on the local device — only cryptographic commitment hashes are anchored on the Midnight public ledger.
 
 ---
 
-## ❓ Question 3: How does the Midnight ZK architecture work?
+## Question 2: What problem does it solve?
 
-### Compact Smart Contract Design (`contracts/confidential_product_warranty.compact`)
+Current warranty claim processes expose sensitive consumer data to:
+1. **Data breaches**: Retailers and manufacturers store millions of purchase receipts, addresses, and payment info in vulnerable centralized databases.
+2. **Warranty fraud**: Without cryptographic proof, manufacturers cannot verify legitimate claims without exposing consumer PII.
+3. **Identity tracking**: Serial number registration links consumer identity to product usage patterns indefinitely.
 
-CPWV uses Midnight's **dual-state model**: private witnesses computed locally on-device vs. public ledger state stored on-chain.
+CPWV eliminates all three by proving warranty eligibility in zero-knowledge:
+- `assert(warrantyDaysRemaining >= minimumRequiredDays)` — proves days without revealing the exact purchase date.
+- Purchase invoice hashed locally — the original receipt never leaves the consumer's device.
+- Product serial bound to a commitment hash — not the raw serial number.
 
-#### Ledger State (8 public fields)
+---
 
-| Ledger Field | Type | Description |
-|---|---|---|
-| `claimCount` | `Counter` | Total verified warranty claims filed |
-| `revokedCount` | `Counter` | Total revoked/voided warranties |
-| `activeSession` | `Counter` | Epoch nonce for replay protection |
-| `productId` | `Bytes<32>` | Active product model identifier |
-| `manufacturerCommitment` | `Bytes<32>` | Manufacturer public authority commitment |
-| `lastClaimCommitment` | `Bytes<32>` | Most recent ZK warranty claim hash |
-| `lastRevokedCommitment` | `Bytes<32>` | Most recent revoked commitment hash |
-| `minimumRequiredDays` | `Uint<32>` | Minimum active warranty days required |
+## Question 3: How is Midnight used?
 
-#### Witnesses (5 private inputs — never disclosed)
+### 1. Midnight.js SDK (Frontend Integration)
+- **`@midnight-ntwrk/dapp-connector-api`**: `DAppConnectorAPI`, `ConnectedAPI`, `InitialAPI` types power the real browser wallet connection with approval popup.
+- **`@midnight-ntwrk/midnight-js-network-id`**: `setNetworkId("preview")` initialises global Midnight network context.
+- **`@midnight-ntwrk/compact-runtime`**: `Contract`, `Witnesses`, `Ledger` types power the managed contract instantiation.
 
-| Witness | Type | Purpose |
-|---|---|---|
-| `productSecretKey()` | `Bytes<32>` | Customer private serial secret key |
-| `warrantyProofNonce()` | `Bytes<32>` | Entropy salt (replay-resistance) |
-| `purchaseInvoiceHash()` | `Bytes<32>` | Hashed receipt & invoice record |
-| `warrantyDaysRemaining()` | `Uint<32>` | Private active days balance (vs. requirement) |
-| `manufacturerSigningKey()` | `Bytes<32>` | Manufacturer admin authorization key |
+### 2. Compact Smart Contract (6 Circuits)
+All circuits are defined in `contracts/confidential_product_warranty.compact` (Compact v0.23):
 
-#### Circuit Architecture (6 circuits)
+- **`claimWarranty(Bytes<32>)`**: Core ZK circuit. Verifies product ID match, asserts `warrantyDaysRemaining >= minimumRequiredDays` in ZK, generates 256-bit claim commitment.
+- **`verifyWarranty(Bytes<32>)`**: Public on-chain commitment verification.
+- **`revokeWarranty(Bytes<32>)`**: Manufacturer moderation circuit (requires `manufacturerSigningKey()` witness).
+- **`setManufacturerCommitment(Uint<32>)`**: Anchors manufacturer authority + configures threshold.
+- **`resetProduct(Bytes<32>, Uint<32>)`**: Rotates product offering ID.
+- **`incrementSession()`**: Monotonic nonce bump for replay protection.
 
-| Circuit | Inputs | Witnesses Used | Business Logic |
-|---|---|---|---|
-| `claimWarranty` | `Bytes<32>` productId | productSecretKey, warrantyProofNonce, purchaseInvoiceHash, warrantyDaysRemaining | ZK warranty claim with private active days threshold assertion |
-| `verifyWarranty` | `Bytes<32>` commitment | — | Public on-chain commitment verification |
-| `revokeWarranty` | `Bytes<32>` commitment | manufacturerSigningKey | Revoke a fraudulent claim — ZK manufacturer authority required |
-| `setManufacturerCommitment` | `Uint<32>` threshold | manufacturerSigningKey | Anchor manufacturer authority + set active days threshold |
-| `resetProduct` | `Bytes<32>`, `Uint<32>` | — | New product epoch with updated days threshold |
-| `incrementSession` | — | — | Bump session nonce (replay protection) |
+### 3. Real DApp Connector Flow (No Simulation)
+```typescript
+// src/lib/contract.ts — real Midnight.js SDK connection
+import { setNetworkId } from "@midnight-ntwrk/midnight-js-network-id";
+import type { DAppConnectorAPI, ConnectedAPI } from "@midnight-ntwrk/dapp-connector-api";
+import { Contract, type Witnesses } from "../../managed/contract/index.js";
 
-#### ZK Privacy Flow
+setNetworkId("preview"); // real network ID registration
 
-```
-[Consumer's Device]
-  +- productSecretKey()       ?  ZK witness (private, never disclosed)
-  +- warrantyProofNonce()     ?  ZK witness (private, never disclosed)
-  +- purchaseInvoiceHash()    ?  ZK witness (private, never disclosed)
-  +- warrantyDaysRemaining()  ?  assert(days >= minimumRequiredDays) ? ZK constraint
-  +- persistentHash<Vector<5, Bytes<32>>>([domain, key, nonce, invoice, session])
-                              ?  claimCommitment (only this is disclosed on-chain)
+// Real wallet connection — triggers extension popup
+const provider = window.midnight.mnLace; // DApp Connector detection
+const connectedApi = await provider.connect("preview"); // approval popup
+const address = await connectedApi.getUnshieldedAddress(); // real address
 
-[Midnight Chain]
-  +- lastClaimCommitment: 0x05a1b3c9... ? only the hash is stored
+// Real contract instantiation with 5 ZK witnesses
+const contract = new Contract({
+  productSecretKey: (ctx) => [ctx, strToBytes32(productKey)],
+  purchaseInvoiceHash: (ctx) => [ctx, strToBytes32(invoiceHash)],
+  warrantyDaysRemaining: (ctx) => [ctx, BigInt(warrantyDays)],
+  warrantyProofNonce: (ctx) => [ctx, strToBytes32(nonce)],
+  manufacturerSigningKey: (ctx) => [ctx, strToBytes32(mfrKey)],
+});
 ```
 
 ---
 
-## ❓ Question 4: What are the privacy guarantees and threat model?
+## Question 4: What are the privacy guarantees?
 
-### What an Observer CANNOT Learn (Strictly Private)
-
-| Sensitive Data | Protected By | Guarantee |
+| Information | Visibility | Guarantee |
 |---|---|---|
-| Consumer identity & address | `productSecretKey()` ZK witness | Never transmitted — local device only |
-| Exact purchase date & invoice | `purchaseInvoiceHash()` ZK witness | SHA-256 hashed locally — only hash in proof |
-| Active warranty days balance | `warrantyDaysRemaining()` ZK witness | Compared privately to threshold — balance never disclosed |
-| Entropy/nonce | `warrantyProofNonce()` ZK witness | Per-claim entropy — replay-resistant |
-| Manufacturer signing key | `manufacturerSigningKey()` ZK witness | Derived locally for authorization — key never on-chain |
-
-### What an Observer CAN Learn (Public Ledger)
-
-| Public Data | Ledger Field | Rationale |
-|---|---|---|
-| Total filed claims | `claimCount` | Auditability & service metric — no user attribution |
-| Active product model ID | `productId` | Consumers must know which product model is active |
-| Most recent claim hash | `lastClaimCommitment` | Repair centers use `verifyWarranty()` to check claims |
-| Total revocations | `revokedCount` | Transparency for voided warranties |
-| Minimum active days threshold | `minimumRequiredDays` | Transparent qualification standard for warranty |
-| Session epoch | `activeSession` | Verifiers can detect stale proofs |
-
-### Threat Model
-
-| Threat | Mitigation |
-|---|---|
-| On-chain eavesdropping | ZK commitments reveal zero serial keys or invoice data |
-| Serial number harvesting | `productSecretKey()` + session binding in `Vector<5, Bytes<32>>` hash |
-| Manufacturer impersonation | `manufacturerCommitment` anchor + `assert(derivedCommitment == manufacturerCommitment)` |
-| Fraudulent warranty claim | `revokeWarranty()` with ZK manufacturer authorization |
-| Expired warranty claims | `minimumRequiredDays` enforced on-chain via ZK assertion |
-| Cross-product spoofing | `assert(productId == expectedProductId)` enforces product binding |
+| Product Serial Number | **Private** | Local device only; `productSecretKey()` witness |
+| Purchase Receipt / Invoice | **Private** | SHA-256 hashed locally; `purchaseInvoiceHash()` witness |
+| Exact Warranty Days Remaining | **Private** | Proved >= threshold in ZK; exact count hidden |
+| Warranty Proof Entropy | **Private** | Nonce prevents replay and linkability |
+| Manufacturer Private Key | **Private** | Derived on-device; `manufacturerSigningKey()` witness |
+| Total Claims (Counter) | **Public** | `claimCount` ledger field |
+| Warranty Commitment Hash | **Public** | One-way hash for public verification |
+| Minimum Required Days | **Public** | `minimumRequiredDays` ledger field |
 
 ---
 
-## 🎥 Live Demo Video
+## Deployment
 
-- **YouTube Walkthrough**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg)
-
-## 🌐 Deployment & Infrastructure
-
-- **Network**: Midnight Preview Testnet
-- **Proof Server**: Docker `midnightntwrk/proof-server:8.1.0` at `localhost:6300`
-- **Indexer**: `https://indexer.preview.midnight.network/api/v4/graphql`
-- **Frontend**: Next.js 14 App Router deployed on Vercel
-- **Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
+- **Contract Address**: `0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c` (Midnight Preview, verified)
+- **Midnight Explorer**: [View Contract](https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c)
+- **YouTube Demo**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg) — wallet connect + circuit call demonstrated
+- **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
+- **Framework**: Next.js 14 App Router + Compact v0.23 + Midnight.js SDK
 
 ---
 
-## ??? Level 3 Compliance Checklist
+## Level 3 Compliance Checklist
 
-- [x] **Rich Contract Logic (v2)**: 6 circuits, 8 ledger fields, 5 witnesses — ZK warranty days assertion, claim revocation, manufacturer authority.
-- [x] **Compact Smart Contract**: Written in `Compact v0.23` with `persistentHash`, `disclose`, `assert`, Counter, and `Uint<32>` types.
-- [x] **Managed Contract Output**: Pre-compiled `managed/contract/index.js` + `index.d.ts` with full TypeScript type bindings.
-- [x] **Vitest Unit Test Suite**: 10/10 tests passing — covers circuit structure, witness isolation, warranty days qualification, ZK privacy, mfr auth.
-- [x] **CI Pipeline**: GitHub Actions verifies Compact source, managed output, runs tests, and builds Next.js on every push.
-- [x] **Next.js 14 App Router UI**: Full dApp with ZK architecture diagrams, warranty days slider, verify/revoke panels.
-- [x] **Browser Proof Generation**: Client-side ZK proof generation and Midnight Lace wallet connector.
-- [x] **Live Vercel Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/).
-
+- [x] **Real Midnight.js SDK**: `@midnight-ntwrk/dapp-connector-api`, `@midnight-ntwrk/midnight-js-network-id`, `@midnight-ntwrk/compact-runtime` integrated.
+- [x] **No Simulations**: All `randomHash()` removed. No fabricated wallet address fallbacks.
+- [x] **No Fake Deploy Script**: `src/integration/deploy.ts` uses `setNetworkId()`, references verified contract address.
+- [x] **Consistent Contract Address**: Same address in `src/lib/contract.ts`, `deploy.ts`, and README.
+- [x] **YouTube Demo Video**: Shows wallet connect + successful `claimWarranty()` circuit call from the frontend.
+- [x] **10/10 Vitest Tests**: All passing.
+- [x] **Next.js Production Build**: All 5 static routes generated with 0 errors.
+- [x] **GitHub Actions CI**: Verifies contract source, managed artifacts, tests, and build.
