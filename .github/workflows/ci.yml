@@ -1,15 +1,14 @@
-﻿name: CI/CD Pipeline — Confidential Product Warranty Verification
+name: CI/CD Pipeline — Confidential Product Warranty Verification
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -24,26 +23,17 @@ jobs:
 
       - name: Verify Compact Contract Source
         run: |
-          echo "=== Compact Contract Source (confidential_product_warranty.compact) ==="
+          echo "=== Compact Contract (confidential_product_warranty.compact) ==="
           cat contracts/confidential_product_warranty.compact
           echo ""
-          echo "=== Compact Contract Source (counter.compact) ==="
-          cat contracts/counter.compact
-          echo ""
-          echo "✅ Compact contract source verified."
-          echo "📦 Managed output verified in managed/contract/"
-          ls -la managed/contract/
-
-      - name: Verify Managed Contract Output
-        run: |
           echo "=== Managed Contract Type Definitions ==="
           cat managed/contract/index.d.ts
           echo ""
-          echo "✅ Managed contract artifacts present (index.js + index.d.ts)"
+          echo "✅ Contract source and managed artifacts verified."
+          ls -la managed/contract/
 
       - name: Run Vitest Unit Tests
         run: npm test
 
-      - name: Build Next.js Web Platform
+      - name: Build Next.js Application
         run: npm run build
-
