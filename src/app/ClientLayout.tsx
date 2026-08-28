@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import { getClient } from "../lib/contract";
@@ -15,24 +16,31 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const handleConnect = useCallback(async () => {
     setConnecting(true);
     try {
-      const res = await getClient().connectWallet();
+      const client = getClient();
+      const res = await client.connectWallet();
       setWalletAddress(res.walletAddress);
     } catch (err: any) {
-      alert(err?.message || "Wallet connection failed.");
+      alert(err?.message || "Wallet connection failed. Please install Midnight Lace or 1AM extension.");
     } finally {
       setConnecting(false);
     }
   }, []);
 
   const handleDisconnect = useCallback(() => {
-    getClient().disconnectWallet();
+    const client = getClient();
+    client.disconnectWallet();
     setWalletAddress(null);
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <Navbar walletAddress={walletAddress} onConnect={handleConnect} onDisconnect={handleDisconnect} connecting={connecting} />
-      <main>{children}</main>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Navbar
+        walletAddress={walletAddress}
+        onConnect={handleConnect}
+        onDisconnect={handleDisconnect}
+        connecting={connecting}
+      />
+      <main style={{ flex: 1 }}>{children}</main>
     </div>
   );
 }
