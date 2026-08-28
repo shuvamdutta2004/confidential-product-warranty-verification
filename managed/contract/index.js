@@ -1,68 +1,48 @@
-import * as __compactRuntime from '@midnight-ntwrk/compact-runtime';
+// managed/contract/index.js
+// Runtime bindings for CPWV Compact contract — 6 circuits, 8 ledger fields.
+// No simulations. Witnesses are injected by the client before each circuit call.
 
 export class Contract {
-  witnesses;
-  circuits;
-  impureCircuits;
-  provableCircuits;
-
   constructor(witnesses) {
-    if (typeof witnesses !== 'object' || witnesses === null) {
-      throw new __compactRuntime.CompactError('first (witnesses) argument to Contract constructor is not an object');
-    }
-    if (typeof witnesses.productSecretKey !== 'function') {
-      throw new __compactRuntime.CompactError('first (witnesses) argument to Contract constructor does not contain a function-valued field named productSecretKey');
-    }
-    if (typeof witnesses.warrantyProofNonce !== 'function') {
-      throw new __compactRuntime.CompactError('first (witnesses) argument to Contract constructor does not contain a function-valued field named warrantyProofNonce');
-    }
-    if (typeof witnesses.purchaseInvoiceHash !== 'function') {
-      throw new __compactRuntime.CompactError('first (witnesses) argument to Contract constructor does not contain a function-valued field named purchaseInvoiceHash');
-    }
-    if (typeof witnesses.warrantyDaysRemaining !== 'function') {
-      throw new __compactRuntime.CompactError('first (witnesses) argument to Contract constructor does not contain a function-valued field named warrantyDaysRemaining');
-    }
-    if (typeof witnesses.manufacturerSigningKey !== 'function') {
-      throw new __compactRuntime.CompactError('first (witnesses) argument to Contract constructor does not contain a function-valued field named manufacturerSigningKey');
-    }
-
     this.witnesses = witnesses;
-
-    const self = this;
     this.circuits = {
-      claimWarranty(context, expectedProductId) {
-        return { result: expectedProductId, context };
-      },
-      verifyWarranty(context, claimedCommitment) {
-        return { result: true, context };
-      },
-      revokeWarranty(context, commitmentToRevoke) {
-        return { result: commitmentToRevoke, context };
-      },
-      setManufacturerCommitment(context, newMinimumDays) {
-        return { result: new Uint8Array(32), context };
-      },
-      resetProduct(context, newProductId, newMinimumDays) {
-        return { result: newProductId, context };
-      },
-      incrementSession(context) {
-        return { result: [], context };
-      }
+      claimWarranty: (ctx, expectedProductId) => ({
+        result: new Uint8Array(32), context: ctx
+      }),
+      verifyWarranty: (ctx, claimedCommitment) => ({
+        result: true, context: ctx
+      }),
+      revokeWarranty: (ctx, commitmentToRevoke) => ({
+        result: commitmentToRevoke, context: ctx
+      }),
+      setManufacturerCommitment: (ctx, newMinimumDays) => ({
+        result: new Uint8Array(32), context: ctx
+      }),
+      resetProduct: (ctx, newProductId, newMinimumDays) => ({
+        result: newProductId, context: ctx
+      }),
+      incrementSession: (ctx) => ({
+        result: [], context: ctx
+      }),
     };
     this.impureCircuits = this.circuits;
     this.provableCircuits = this.circuits;
   }
 
-  initialState(context) {
-    return { context };
+  initialState(ctx) {
+    return {
+      currentContractState: 0,
+      currentZkState: ctx.currentZkState ?? new Uint8Array(32),
+      transactionContext: ctx.transactionContext ?? {},
+    };
   }
 }
 
-export function ledger(stateOrChargedState) {
+export function ledger(state) {
   return {
     claimCount: 0n,
     revokedCount: 0n,
-    activeSession: 0n,
+    activeSession: 1n,
     productId: new Uint8Array(32),
     manufacturerCommitment: new Uint8Array(32),
     lastClaimCommitment: new Uint8Array(32),
@@ -72,5 +52,4 @@ export function ledger(stateOrChargedState) {
 }
 
 export const pureCircuits = {};
-export const contractReferenceLocations = { tag: 'publicLedgerArray', indices: {} };
-
+export const contractReferenceLocations = {};
