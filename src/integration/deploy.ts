@@ -1,10 +1,10 @@
-// ============================================================================
+﻿// ============================================================================
 // CPWV — REAL MIDNIGHT.JS DEPLOYMENT SCRIPT
 // ============================================================================
 // Run: npx tsx src/integration/deploy.ts
 // Requires: Midnight Lace wallet + proof-server on port 6300
 // This script uses the real Midnight.js SDK — no simulated/fake addresses.
-// Deployed contract: 0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c
+// Deployed contract: 0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48
 // ============================================================================
 
 import { setNetworkId } from "@midnight-ntwrk/midnight-js-network-id";
@@ -16,7 +16,7 @@ const PROOF_URL   = "http://localhost:6300";
 
 // Verified on-chain contract address — do NOT replace with a random value.
 const CONTRACT_ADDRESS =
-  "0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c";
+  "0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48";
 
 async function main() {
   console.log("=============================================================");

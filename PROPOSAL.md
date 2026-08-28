@@ -1,4 +1,4 @@
-# Project Proposal: Confidential Product Warranty Verification (CPWV)
+﻿# Project Proposal: Confidential Product Warranty Verification (CPWV)
 > Privacy-Preserving Zero-Knowledge Product Authentication & Warranty Claim Protocol on Midnight Network
 
 ---
@@ -7,9 +7,9 @@
 
 > **Demonstrates wallet connect + successful claimWarranty() circuit call from the frontend.**
 
-[![CPWV Video Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Live%20Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/nwRXDIlEbtg)
+[![CPWV Video Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Live%20Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/rnHPdSnrsLw)
 
-**Watch on YouTube**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg)
+**Watch on YouTube**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw)
 
 ---
 
@@ -95,9 +95,9 @@ const contract = new Contract({
 
 ## Deployment
 
-- **Contract Address**: `0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c` (Midnight Preview, verified)
-- **Midnight Explorer**: [View Contract](https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c)
-- **YouTube Demo**: [https://youtu.be/nwRXDIlEbtg](https://youtu.be/nwRXDIlEbtg) — wallet connect + circuit call demonstrated
+- **Contract Address**: `0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48` (Midnight Preview, verified)
+- **Midnight Explorer**: [View Contract](https://preview.midnightexplorer.com/contracts/0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48)
+- **YouTube Demo**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw) — wallet connect + circuit call demonstrated
 - **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
 - **Framework**: Next.js 14 App Router + Compact v0.23 + Midnight.js SDK
 

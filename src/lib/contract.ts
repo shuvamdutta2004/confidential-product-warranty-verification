@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // ============================================================================
 // CONFIDENTIAL PRODUCT WARRANTY VERIFICATION (CPWV) — MIDNIGHT.JS SDK CLIENT
@@ -7,7 +7,7 @@
 // Uses @midnight-ntwrk/dapp-connector-api for wallet connection.
 // Uses @midnight-ntwrk/midnight-js-network-id for setNetworkId().
 // Uses @midnight-ntwrk/compact-runtime + managed Contract for circuit calls.
-// CONTRACT: 0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c
+// CONTRACT: 0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48
 // NETWORK:  Midnight Preview Testnet
 // ============================================================================
 
@@ -22,7 +22,7 @@ import { Contract, ledger, type Witnesses } from "../../managed/contract/index.j
 
 // ── Verified On-Chain Contract Address (Midnight Preview Testnet) ─────────────
 export const CONTRACT_ADDRESS =
-  "0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c";
+  "0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48";
 
 export interface NetworkConfiguration {
   networkId: string;
