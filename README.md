@@ -2,7 +2,7 @@
 > A privacy-preserving zero-knowledge product authentication & warranty claim dApp built on the Midnight Network using Compact smart contracts and Midnight.js SDK.
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-confidential--product--warranty--verification-181717?style=flat-square&logo=github)](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
-[![YouTube Demo](https://img.shields.io/badge/YouTube-Live_Demo_Video-FF0000?style=flat-square&logo=youtube)](https://youtu.be/rnHPdSnrsLw)
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Live_Demo_Video-FF0000?style=flat-square&logo=youtube)](https://youtu.be/WeqR2uJzXZw)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_App-000000?style=flat-square&logo=vercel)](https://confidential-product-warranty-verification.vercel.app/)
 [![CI/CD Pipeline](https://github.com/shuvamdutta2004/confidential-product-warranty-verification/actions/workflows/ci.yml/badge.svg)](https://github.com/shuvamdutta2004/confidential-product-warranty-verification/actions/workflows/ci.yml)
 [![Midnight Network](https://img.shields.io/badge/Network-Midnight_Preview-8b5cf6?style=flat-square)](https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a)
@@ -28,9 +28,9 @@ Built on Midnight Network's Compact zero-knowledge smart contracts and integrate
 
 > **Demonstrates:** Midnight Lace wallet connect flow + successful `claimWarranty()` circuit call + ZK commitment anchored on-chain.
 
-[![CPWV Video Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Live%20Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/rnHPdSnrsLw)
+[![CPWV Video Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Live%20Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/WeqR2uJzXZw)
 
-**Watch on YouTube**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw)
+**Watch on YouTube**: [https://youtu.be/WeqR2uJzXZw](https://youtu.be/WeqR2uJzXZw)
 
 The demo video shows:
 1. **Wallet Connect**: Connecting Midnight Lace / 1AM extension via `@midnight-ntwrk/dapp-connector-api`
@@ -45,7 +45,7 @@ The demo video shows:
 - **Project Proposal**: [PROPOSAL.md](PROPOSAL.md)
 - **GitHub Repository**: [https://github.com/shuvamdutta2004/confidential-product-warranty-verification](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
 - **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
-- **YouTube Video Walkthrough**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw)
+- **YouTube Video Walkthrough**: [https://youtu.be/WeqR2uJzXZw](https://youtu.be/WeqR2uJzXZw)
 - **CI/CD Workflow**: [.github/workflows/ci.yml](.github/workflows/ci.yml)
 - **Deployment Workflow**: [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
 - **Midnight Explorer**: [https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a](https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a)
@@ -108,18 +108,18 @@ The Next.js 14 frontend is wired to the on-chain Compact contract via the **Midn
 
 ```
 Next.js 14 UI (warranty claim form & admin console)
-         │
-         │ import { getClient } from "@/lib/contract"
-         │
+         â”‚
+         â”‚ import { getClient } from "@/lib/contract"
+         â”‚
 ConfidentialWarrantyClient (src/lib/contract.ts)
-         │
-         ├── @midnight-ntwrk/dapp-connector-api      (Lace/1AM wallet popup & signing)
-         ├── @midnight-ntwrk/midnight-js-network-id  (setNetworkId("preview"))
-         ├── @midnight-ntwrk/compact-runtime         (Contract + Witnesses + ledger())
-         └── @midnight-ntwrk/midnight-js-contracts   (deployContract() API)
-         │
+         â”‚
+         â”œâ”€â”€ @midnight-ntwrk/dapp-connector-api      (Lace/1AM wallet popup & signing)
+         â”œâ”€â”€ @midnight-ntwrk/midnight-js-network-id  (setNetworkId("preview"))
+         â”œâ”€â”€ @midnight-ntwrk/compact-runtime         (Contract + Witnesses + ledger())
+         â””â”€â”€ @midnight-ntwrk/midnight-js-contracts   (deployContract() API)
+         â”‚
 Midnight Lace / 1AM Extension (browser)
-         │
+         â”‚
 Midnight Preview Testnet
 Contract: 0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a
 ```
@@ -217,5 +217,5 @@ Contract: 0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a
 - [x] **No Fabricated Wallet Addresses**: Only authentic wallet addresses returned by the connected extension are accepted.
 - [x] **Compact Verification in CI**: GitHub Actions pipeline verifies Compact contract source, AST alignment, and circuit artifacts (`npm run compile:compact`).
 - [x] **Deployment Security Documented**: Manual deployment security design (protecting offline manufacturer private keys from automated CI environments) fully documented.
-- [x] **YouTube Demo Video**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw) demonstrates wallet connect, ZK witness loading, and on-chain circuit submission.
+- [x] **YouTube Demo Video**: [https://youtu.be/WeqR2uJzXZw](https://youtu.be/WeqR2uJzXZw) demonstrates wallet connect, ZK witness loading, and on-chain circuit submission.
 - [x] **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)

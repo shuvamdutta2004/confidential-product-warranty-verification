@@ -7,9 +7,9 @@
 
 > **Demonstrates Midnight Lace wallet connection, proof creation, and successful `claimWarranty()` circuit call from the frontend.**
 
-[![CPWV Video Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Live%20Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/rnHPdSnrsLw)
+[![CPWV Video Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Live%20Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtu.be/WeqR2uJzXZw)
 
-**Watch on YouTube**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw)
+**Watch on YouTube**: [https://youtu.be/WeqR2uJzXZw](https://youtu.be/WeqR2uJzXZw)
 
 ---
 
@@ -138,7 +138,7 @@ const deployed = await deployContract(providers, {
 
 - **Contract Address**: `0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a` (Midnight Preview, verified on-chain)
 - **Midnight Explorer**: [https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a](https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a)
-- **YouTube Demo**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw) - wallet connect + circuit call demonstrated
+- **YouTube Demo**: [https://youtu.be/WeqR2uJzXZw](https://youtu.be/WeqR2uJzXZw) - wallet connect + circuit call demonstrated
 - **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
 - **Framework**: Next.js 14 App Router + Compact v0.23 + Midnight.js SDK
 
