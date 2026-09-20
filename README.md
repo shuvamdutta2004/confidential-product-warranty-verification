@@ -3,7 +3,7 @@
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-confidential--product--warranty--verification-181717?style=flat-square&logo=github)](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
 [![YouTube Demo](https://img.shields.io/badge/YouTube-Live_Demo_Video-FF0000?style=flat-square&logo=youtube)](https://youtu.be/WeqR2uJzXZw)
-[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_App-000000?style=flat-square&logo=vercel)](https://confidential-product-warranty-verification.vercel.app/)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_App-000000?style=flat-square&logo=vercel)](https://confidential-product-warranty-verif-hazel.vercel.app/)
 [![CI/CD Pipeline](https://github.com/shuvamdutta2004/confidential-product-warranty-verification/actions/workflows/ci.yml/badge.svg)](https://github.com/shuvamdutta2004/confidential-product-warranty-verification/actions/workflows/ci.yml)
 [![Midnight Network](https://img.shields.io/badge/Network-Midnight_Preview-8b5cf6?style=flat-square)](https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a)
 [![Midnight.js SDK](https://img.shields.io/badge/Midnight.js-SDK_Integrated-3b82f6?style=flat-square)](https://midnight.network)
@@ -44,7 +44,7 @@ The demo video shows:
 
 - **Project Proposal**: [PROPOSAL.md](PROPOSAL.md)
 - **GitHub Repository**: [https://github.com/shuvamdutta2004/confidential-product-warranty-verification](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
-- **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
+- **Vercel Live Demo**: [https://confidential-product-warranty-verif-hazel.vercel.app/](https://confidential-product-warranty-verif-hazel.vercel.app/)
 - **YouTube Video Walkthrough**: [https://youtu.be/WeqR2uJzXZw](https://youtu.be/WeqR2uJzXZw)
 - **CI/CD Workflow**: [.github/workflows/ci.yml](.github/workflows/ci.yml)
 - **Deployment Workflow**: [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
@@ -108,18 +108,18 @@ The Next.js 14 frontend is wired to the on-chain Compact contract via the **Midn
 
 ```
 Next.js 14 UI (warranty claim form & admin console)
-         â”‚
-         â”‚ import { getClient } from "@/lib/contract"
-         â”‚
+         Ã¢â€â€š
+         Ã¢â€â€š import { getClient } from "@/lib/contract"
+         Ã¢â€â€š
 ConfidentialWarrantyClient (src/lib/contract.ts)
-         â”‚
-         â”œâ”€â”€ @midnight-ntwrk/dapp-connector-api      (Lace/1AM wallet popup & signing)
-         â”œâ”€â”€ @midnight-ntwrk/midnight-js-network-id  (setNetworkId("preview"))
-         â”œâ”€â”€ @midnight-ntwrk/compact-runtime         (Contract + Witnesses + ledger())
-         â””â”€â”€ @midnight-ntwrk/midnight-js-contracts   (deployContract() API)
-         â”‚
+         Ã¢â€â€š
+         Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ @midnight-ntwrk/dapp-connector-api      (Lace/1AM wallet popup & signing)
+         Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ @midnight-ntwrk/midnight-js-network-id  (setNetworkId("preview"))
+         Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ @midnight-ntwrk/compact-runtime         (Contract + Witnesses + ledger())
+         Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ @midnight-ntwrk/midnight-js-contracts   (deployContract() API)
+         Ã¢â€â€š
 Midnight Lace / 1AM Extension (browser)
-         â”‚
+         Ã¢â€â€š
 Midnight Preview Testnet
 Contract: 0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a
 ```
@@ -218,4 +218,4 @@ Contract: 0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a
 - [x] **Compact Verification in CI**: GitHub Actions pipeline verifies Compact contract source, AST alignment, and circuit artifacts (`npm run compile:compact`).
 - [x] **Deployment Security Documented**: Manual deployment security design (protecting offline manufacturer private keys from automated CI environments) fully documented.
 - [x] **YouTube Demo Video**: [https://youtu.be/WeqR2uJzXZw](https://youtu.be/WeqR2uJzXZw) demonstrates wallet connect, ZK witness loading, and on-chain circuit submission.
-- [x] **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
+- [x] **Vercel Live Demo**: [https://confidential-product-warranty-verif-hazel.vercel.app/](https://confidential-product-warranty-verif-hazel.vercel.app/)
