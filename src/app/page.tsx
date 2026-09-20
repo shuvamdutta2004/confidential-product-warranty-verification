@@ -1,4 +1,4 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -89,7 +89,7 @@ export default function HomePage() {
           {/* ── Action Links ── */}
           <div className="glass-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <a href="https://preview.midnightexplorer.com/contracts/0x6901581544ed1b8b2589d39fc4c95f6d48aeae5e0a76469f9707c77091c0a42c"
+              <a href="https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a"
                 target="_blank" rel="noopener noreferrer" className="btn-secondary">
                 🔍 Midnight Explorer
               </a>

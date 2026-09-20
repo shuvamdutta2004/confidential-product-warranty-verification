@@ -1,121 +1,242 @@
 {
-  "compiler-version": "0.31.1",
-  "language-version": "0.23.0",
-  "runtime-version": "0.16.0",
-  "circuits": [
-    {
-      "name": "submitExam",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "expectedExamId",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "resetExam",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "newExamId",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "incrementSession",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    }
-  ],
-  "witnesses": [
-    {
-      "name": "studentSecretKey",
-      "arguments": [
-      ],
-      "result type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "submissionNonce",
-      "arguments": [
-      ],
-      "result type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "answerHash",
-      "arguments": [
-      ],
-      "result type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    }
-  ],
-  "contracts": [
-  ],
-  "ledger": [
-    {
-      "name": "submissionCount",
-      "index": 0,
-      "exported": true,
-      "storage": "Counter"
-    },
-    {
-      "name": "examId",
-      "index": 1,
-      "exported": true,
-      "storage": "Cell",
-      "type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "lastSubmissionCommitment",
-      "index": 2,
-      "exported": true,
-      "storage": "Cell",
-      "type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "activeSession",
-      "index": 3,
-      "exported": true,
-      "storage": "Counter"
-    }
-  ]
+    "witnesses":  [
+                      {
+                          "result type":  {
+                                              "type-name":  "Bytes",
+                                              "length":  32
+                                          },
+                          "arguments":  [
+
+                                        ],
+                          "name":  "productSecretKey"
+                      },
+                      {
+                          "result type":  {
+                                              "type-name":  "Bytes",
+                                              "length":  32
+                                          },
+                          "arguments":  [
+
+                                        ],
+                          "name":  "warrantyProofNonce"
+                      },
+                      {
+                          "result type":  {
+                                              "type-name":  "Bytes",
+                                              "length":  32
+                                          },
+                          "arguments":  [
+
+                                        ],
+                          "name":  "purchaseInvoiceHash"
+                      },
+                      {
+                          "result type":  {
+                                              "type-name":  "Uint",
+                                              "bits":  32
+                                          },
+                          "arguments":  [
+
+                                        ],
+                          "name":  "warrantyDaysRemaining"
+                      },
+                      {
+                          "result type":  {
+                                              "type-name":  "Bytes",
+                                              "length":  32
+                                          },
+                          "arguments":  [
+
+                                        ],
+                          "name":  "manufacturerSigningKey"
+                      }
+                  ],
+    "language-version":  "0.23.0",
+    "runtime-version":  "0.16.0",
+    "circuits":  [
+                     {
+                         "result-type":  {
+                                             "type-name":  "Bytes",
+                                             "length":  32
+                                         },
+                         "pure":  false,
+                         "arguments":  [
+                                           {
+                                               "name":  "expectedProductId",
+                                               "type":  {
+                                                            "type-name":  "Bytes",
+                                                            "length":  32
+                                                        }
+                                           }
+                                       ],
+                         "name":  "claimWarranty",
+                         "proof":  true
+                     },
+                     {
+                         "result-type":  {
+                                             "type-name":  "Boolean"
+                                         },
+                         "pure":  false,
+                         "arguments":  [
+                                           {
+                                               "name":  "claimedCommitment",
+                                               "type":  {
+                                                            "type-name":  "Bytes",
+                                                            "length":  32
+                                                        }
+                                           }
+                                       ],
+                         "name":  "verifyWarranty",
+                         "proof":  true
+                     },
+                     {
+                         "result-type":  {
+                                             "type-name":  "Bytes",
+                                             "length":  32
+                                         },
+                         "pure":  false,
+                         "arguments":  [
+                                           {
+                                               "name":  "commitmentToRevoke",
+                                               "type":  {
+                                                            "type-name":  "Bytes",
+                                                            "length":  32
+                                                        }
+                                           }
+                                       ],
+                         "name":  "revokeWarranty",
+                         "proof":  true
+                     },
+                     {
+                         "result-type":  {
+                                             "type-name":  "Bytes",
+                                             "length":  32
+                                         },
+                         "pure":  false,
+                         "arguments":  [
+                                           {
+                                               "name":  "newMinimumDays",
+                                               "type":  {
+                                                            "type-name":  "Uint",
+                                                            "bits":  32
+                                                        }
+                                           }
+                                       ],
+                         "name":  "setManufacturerCommitment",
+                         "proof":  true
+                     },
+                     {
+                         "result-type":  {
+                                             "type-name":  "Bytes",
+                                             "length":  32
+                                         },
+                         "pure":  false,
+                         "arguments":  [
+                                           {
+                                               "name":  "newProductId",
+                                               "type":  {
+                                                            "type-name":  "Bytes",
+                                                            "length":  32
+                                                        }
+                                           },
+                                           {
+                                               "name":  "newMinimumDays",
+                                               "type":  {
+                                                            "type-name":  "Uint",
+                                                            "bits":  32
+                                                        }
+                                           }
+                                       ],
+                         "name":  "resetProduct",
+                         "proof":  true
+                     },
+                     {
+                         "result-type":  {
+                                             "types":  [
+
+                                                       ],
+                                             "type-name":  "Tuple"
+                                         },
+                         "pure":  false,
+                         "arguments":  [
+
+                                       ],
+                         "name":  "incrementSession",
+                         "proof":  true
+                     }
+                 ],
+    "contracts":  [
+
+                  ],
+    "ledger":  [
+                   {
+                       "exported":  true,
+                       "name":  "claimCount",
+                       "storage":  "Counter",
+                       "index":  0
+                   },
+                   {
+                       "exported":  true,
+                       "name":  "revokedCount",
+                       "storage":  "Counter",
+                       "index":  1
+                   },
+                   {
+                       "exported":  true,
+                       "name":  "activeSession",
+                       "storage":  "Counter",
+                       "index":  2
+                   },
+                   {
+                       "exported":  true,
+                       "name":  "productId",
+                       "storage":  "Cell",
+                       "type":  {
+                                    "type-name":  "Bytes",
+                                    "length":  32
+                                },
+                       "index":  3
+                   },
+                   {
+                       "exported":  true,
+                       "name":  "manufacturerCommitment",
+                       "storage":  "Cell",
+                       "type":  {
+                                    "type-name":  "Bytes",
+                                    "length":  32
+                                },
+                       "index":  4
+                   },
+                   {
+                       "exported":  true,
+                       "name":  "lastClaimCommitment",
+                       "storage":  "Cell",
+                       "type":  {
+                                    "type-name":  "Bytes",
+                                    "length":  32
+                                },
+                       "index":  5
+                   },
+                   {
+                       "exported":  true,
+                       "name":  "lastRevokedCommitment",
+                       "storage":  "Cell",
+                       "type":  {
+                                    "type-name":  "Bytes",
+                                    "length":  32
+                                },
+                       "index":  6
+                   },
+                   {
+                       "exported":  true,
+                       "name":  "minimumRequiredDays",
+                       "storage":  "Cell",
+                       "type":  {
+                                    "type-name":  "Uint",
+                                    "bits":  32
+                                },
+                       "index":  7
+                   }
+               ],
+    "compiler-version":  "0.31.1"
 }

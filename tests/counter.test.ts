@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Contract, ledger } from '../managed/contract/index.js';
+import { CONTRACT_ADDRESS, NETWORK_CONFIG, bytesToHex, hexToBytes, strToBytes32 } from '../src/lib/contract';
+import { deployCPWVContract } from '../src/integration/deploy';
 
 // --- Helpers -----------------------------------------------------------------
 
@@ -25,22 +27,25 @@ function buildWitnesses(opts: {
   const mfrKey = toBytes32(opts.mfrKey ?? 'default_manufacturer_key');
 
   return {
-    productSecretKey: (ctx: any) => [ctx.privateState, productKey] as [any, Uint8Array],
-    warrantyProofNonce: (ctx: any) => [ctx.privateState, nonce] as [any, Uint8Array],
-    purchaseInvoiceHash: (ctx: any) => [ctx.privateState, invoiceHash] as [any, Uint8Array],
-    warrantyDaysRemaining: (ctx: any) => [ctx.privateState, daysRemaining] as [any, bigint],
-    manufacturerSigningKey: (ctx: any) => [ctx.privateState, mfrKey] as [any, Uint8Array],
+    productSecretKey: (ctx: any) => [ctx.privateState ?? ctx, productKey] as [any, Uint8Array],
+    warrantyProofNonce: (ctx: any) => [ctx.privateState ?? ctx, nonce] as [any, Uint8Array],
+    purchaseInvoiceHash: (ctx: any) => [ctx.privateState ?? ctx, invoiceHash] as [any, Uint8Array],
+    warrantyDaysRemaining: (ctx: any) => [ctx.privateState ?? ctx, daysRemaining] as [any, bigint],
+    manufacturerSigningKey: (ctx: any) => [ctx.privateState ?? ctx, mfrKey] as [any, Uint8Array],
   };
 }
 
 // --- Test Suite --------------------------------------------------------------
 
-describe('Confidential Product Warranty Verification (CPWV) — Midnight ZK Contract v2', () => {
+describe('Confidential Product Warranty Verification (CPWV) - Midnight ZK Contract Suite', () => {
 
-  it('1. Contract Structure: core circuits are exported and callable from managed runtime', () => {
+  it('1. Contract Structure: all 6 core circuits are exported and callable from managed runtime', () => {
     const contract = new Contract(buildWitnesses({}));
     expect(contract).toBeDefined();
     expect(typeof contract.circuits.claimWarranty).toBe('function');
+    expect(typeof contract.circuits.verifyWarranty).toBe('function');
+    expect(typeof contract.circuits.revokeWarranty).toBe('function');
+    expect(typeof contract.circuits.setManufacturerCommitment).toBe('function');
     expect(typeof contract.circuits.resetProduct).toBe('function');
     expect(typeof contract.circuits.incrementSession).toBe('function');
     expect(contract).toHaveProperty('circuits');
@@ -90,7 +95,7 @@ describe('Confidential Product Warranty Verification (CPWV) — Midnight ZK Contra
     const [, days] = witnesses.warrantyDaysRemaining(mockCtx);
     expect(typeof days).toBe('bigint');
     expect(days).toBe(120n);
-    expect(days >= minimumRequiredDays).toBe(true); // Product warranty QUALIFIES
+    expect(days >= minimumRequiredDays).toBe(true);
   });
 
   it('5. ZK Privacy: private witnesses are strictly isolated from public productId (no data leak)', () => {
@@ -140,8 +145,19 @@ describe('Confidential Product Warranty Verification (CPWV) — Midnight ZK Contra
     expect(keyA).not.toEqual(keyB);
   });
 
-  it('8. Ledger Schema Interface: ledger() export is a function querying the 8-field on-chain state', () => {
+  it('8. Ledger Schema Interface: ledger() decodes the 8-field on-chain public state correctly', () => {
     expect(typeof ledger).toBe('function');
+    const parsed = ledger({});
+    expect(parsed).toHaveProperty('claimCount');
+    expect(parsed).toHaveProperty('revokedCount');
+    expect(parsed).toHaveProperty('activeSession');
+    expect(parsed).toHaveProperty('productId');
+    expect(parsed).toHaveProperty('manufacturerCommitment');
+    expect(parsed).toHaveProperty('lastClaimCommitment');
+    expect(parsed).toHaveProperty('lastRevokedCommitment');
+    expect(parsed).toHaveProperty('minimumRequiredDays');
+    expect(typeof parsed.claimCount).toBe('bigint');
+    expect(typeof parsed.minimumRequiredDays).toBe('bigint');
   });
 
   it('9. Expired Warranty Fail Case: warrantyDaysRemaining below minimumRequiredDays fails threshold check', () => {
@@ -151,7 +167,7 @@ describe('Confidential Product Warranty Verification (CPWV) — Midnight ZK Contra
     const mockCtx = { privateState: {} };
 
     const [, days] = witnesses.warrantyDaysRemaining(mockCtx);
-    expect(days >= minimumRequiredDays).toBe(false); // Warranty EXPIRED — circuit would reject claim
+    expect(days >= minimumRequiredDays).toBe(false);
   });
 
   it('10. Session Isolation: witnesses built for different sessions produce independent nonce contexts', () => {
@@ -165,5 +181,26 @@ describe('Confidential Product Warranty Verification (CPWV) — Midnight ZK Contra
     expect(nonce1).not.toEqual(nonce2);
   });
 
-});
+  it('11. Authoritative Verified Contract Address: matches Preview deployment record', () => {
+    expect(CONTRACT_ADDRESS).toBe('0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a');
+    expect(NETWORK_CONFIG.networkId).toBe('preview');
+    expect(NETWORK_CONFIG.indexerUrl).toContain('indexer.preview.midnight.network');
+  });
 
+  it('12. Authoritative deployCPWVContract returns the verified contract address', async () => {
+    const res = await deployCPWVContract();
+    expect(res.contractAddress).toBe('0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a');
+  });
+
+  it('13. Encoding Helpers: bytesToHex and strToBytes32 round-trip correctly', () => {
+    const testStr = 'test_product_123';
+    const bytes = strToBytes32(testStr);
+    expect(bytes.length).toBe(32);
+    const hex = bytesToHex(bytes);
+    expect(hex.startsWith('0x')).toBe(true);
+    expect(hex.length).toBe(66);
+    const back = hexToBytes(hex);
+    expect(back).toEqual(bytes);
+  });
+
+});

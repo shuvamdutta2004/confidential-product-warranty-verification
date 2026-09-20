@@ -1,11 +1,11 @@
-﻿# Confidential Product Warranty Verification (CPWV)
+# Confidential Product Warranty Verification (CPWV)
 > A privacy-preserving zero-knowledge product authentication & warranty claim dApp built on the Midnight Network using Compact smart contracts and Midnight.js SDK.
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-confidential--product--warranty--verification-181717?style=flat-square&logo=github)](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
 [![YouTube Demo](https://img.shields.io/badge/YouTube-Live_Demo_Video-FF0000?style=flat-square&logo=youtube)](https://youtu.be/rnHPdSnrsLw)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_App-000000?style=flat-square&logo=vercel)](https://confidential-product-warranty-verification.vercel.app/)
 [![CI/CD Pipeline](https://github.com/shuvamdutta2004/confidential-product-warranty-verification/actions/workflows/ci.yml/badge.svg)](https://github.com/shuvamdutta2004/confidential-product-warranty-verification/actions/workflows/ci.yml)
-[![Midnight Network](https://img.shields.io/badge/Network-Midnight_Preview-8b5cf6?style=flat-square)](https://preview.midnightexplorer.com/contracts/0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48)
+[![Midnight Network](https://img.shields.io/badge/Network-Midnight_Preview-8b5cf6?style=flat-square)](https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a)
 [![Midnight.js SDK](https://img.shields.io/badge/Midnight.js-SDK_Integrated-3b82f6?style=flat-square)](https://midnight.network)
 [![Compact Language](https://img.shields.io/badge/Compact-v0.23-e11d48?style=flat-square)](https://midnight.network)
 [![Framework](https://img.shields.io/badge/Framework-Next.js_14-black?style=flat-square&logo=nextdotjs)](https://nextjs.org)
@@ -18,9 +18,9 @@
 
 **Confidential Product Warranty Verification (CPWV)** enables consumers to register products, prove active warranty coverage, and file repair or replacement claims **without exposing personal identity, product serial numbers, store receipts, purchase dates, or credit card details** to retailers, manufacturers, or repair centers.
 
-Built on Midnight Network's Compact zero-knowledge smart contracts and integrated with the **Midnight.js SDK** (`@midnight-ntwrk/dapp-connector-api`, `@midnight-ntwrk/midnight-js-network-id`, `@midnight-ntwrk/compact-runtime`), consumers generate cryptographic ZK proofs locally on their own device. Only a warranty claim commitment hash is disclosed on-chain — eliminating financial data breaches, identity tracking, and warranty fraud.
+Built on Midnight Network's Compact zero-knowledge smart contracts and integrated with the **Midnight.js SDK** (`@midnight-ntwrk/dapp-connector-api`, `@midnight-ntwrk/midnight-js-network-id`, `@midnight-ntwrk/compact-runtime`, `@midnight-ntwrk/midnight-js-contracts`), consumers generate cryptographic ZK proofs locally on their own device. Only a warranty claim commitment hash is disclosed on-chain - eliminating financial data breaches, identity tracking, and warranty fraud.
 
-> **Verify product authenticity & claim warranties mathematically — without exposing personal receipts, serial numbers, or customer identity.**
+> **Verify product authenticity & claim warranties mathematically - without exposing personal receipts, serial numbers, or customer identity.**
 
 ---
 
@@ -36,23 +36,67 @@ The demo video shows:
 1. **Wallet Connect**: Connecting Midnight Lace / 1AM extension via `@midnight-ntwrk/dapp-connector-api`
 2. **Circuit Call**: Executing `claimWarranty(Bytes<32>)` from the frontend with ZK witness loading
 3. **On-Chain Commitment**: ZK warranty commitment hash anchored to `claimCount` on Midnight Preview
-4. **Fund Manager Console**: `setManufacturerCommitment()` and `revokeWarranty()` circuit execution
+4. **Manufacturer Admin Console**: `setManufacturerCommitment()` and `revokeWarranty()` circuit execution
 
 ---
 
-## Repository & Deployment
+## Repository & Deployment Details
 
 - **Project Proposal**: [PROPOSAL.md](PROPOSAL.md)
 - **GitHub Repository**: [https://github.com/shuvamdutta2004/confidential-product-warranty-verification](https://github.com/shuvamdutta2004/confidential-product-warranty-verification)
 - **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)
 - **YouTube Video Walkthrough**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw)
 - **CI/CD Workflow**: [.github/workflows/ci.yml](.github/workflows/ci.yml)
-- **Midnight Explorer**: [https://preview.midnightexplorer.com/contracts/0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48](https://preview.midnightexplorer.com/contracts/0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48)
+- **Deployment Workflow**: [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
+- **Midnight Explorer**: [https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a](https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a)
 - **Network**: Midnight Preview Testnet
-- **Contract Address**: `0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48` (verified on-chain)
+- **Authoritative Contract Address**: `0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a` (verified on-chain)
 - **Preview Node RPC**: `https://rpc.preview.midnight.network`
-- **Preview Indexer**: `https://indexer.preview.midnight.network/api/v4/graphql`
+- **Preview Indexer GraphQL**: `https://indexer.preview.midnight.network/api/v4/graphql`
 - **Preview Faucet**: `https://faucet.preview.midnight.network`
+
+---
+
+## Getting Started: Clone & Setup Guide
+
+### Prerequisites
+- **Node.js**: `v20.x` or `v22.x` (recommended: Node.js v22)
+- **npm**: `v9.x` or higher
+- **Midnight Lace / 1AM Browser Extension**: Configured on Midnight Preview Testnet
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/shuvamdutta2004/confidential-product-warranty-verification.git
+cd confidential-product-warranty-verification
+```
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Verify Compact Contract Compilation
+Run the automated Compact contract and managed artifacts verification suite:
+```bash
+npm run compile:compact
+```
+
+### 4. Run Contract Unit Tests (Vitest)
+Execute the 13 automated unit tests validating circuit signatures, witness isolation, threshold checks, and ledger state decoding:
+```bash
+npm test
+```
+
+### 5. Start the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the live dApp.
+
+### 6. Build for Production
+```bash
+npm run build
+```
 
 ---
 
@@ -63,30 +107,31 @@ The demo video shows:
 The Next.js 14 frontend is wired to the on-chain Compact contract via the **Midnight.js SDK**:
 
 ```
-Next.js 14 UI (warranty claim form)
-         |
-         | import { getClient } from "@/lib/contract"
-         |
+Next.js 14 UI (warranty claim form & admin console)
+         │
+         │ import { getClient } from "@/lib/contract"
+         │
 ConfidentialWarrantyClient (src/lib/contract.ts)
-         |
-         | @midnight-ntwrk/dapp-connector-api   ← wallet connect/approval popup
-         | @midnight-ntwrk/midnight-js-network-id  ← setNetworkId("preview")
-         | @midnight-ntwrk/compact-runtime       ← Contract + Witnesses
-         |
+         │
+         ├── @midnight-ntwrk/dapp-connector-api      (Lace/1AM wallet popup & signing)
+         ├── @midnight-ntwrk/midnight-js-network-id  (setNetworkId("preview"))
+         ├── @midnight-ntwrk/compact-runtime         (Contract + Witnesses + ledger())
+         └── @midnight-ntwrk/midnight-js-contracts   (deployContract() API)
+         │
 Midnight Lace / 1AM Extension (browser)
-         |
+         │
 Midnight Preview Testnet
-Contract: 0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48
+Contract: 0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a
 ```
 
 **Key SDK integration points in `src/lib/contract.ts`:**
-- `setNetworkId("preview")` — registers global Midnight network ID on load
-- `getBrowserWalletProvider()` — detects `window.midnight.mnLace` / `window.midnight.lace` / `window.mnLace`
-- `connectWallet()` — triggers real `provider.connect("preview")` approval popup via DApp Connector API, resolves real wallet address (`getUnshieldedAddress`, `getShieldedAddresses`, etc.)
-- `buildContract()` — instantiates `new Contract(witnesses)` from managed artifacts with 5 ZK witnesses
-- All 6 circuit methods attempt `walletApi.submitCallTx()` first for real on-chain calls
-
-**No random hashes. No fabricated wallet addresses. No simulation fallbacks that bypass the SDK.**
+- `setNetworkId("preview")`: Registers global Midnight network identifier on load.
+- `getBrowserWalletProvider()`: Detects `window.midnight.mnLace` / `window.midnight.lace`.
+- `connectWallet()`: Triggers real `provider.connect("preview")` approval popup via DApp Connector API, resolves real wallet address (`getUnshieldedAddress`, `getShieldedAddresses`). Fabricated addresses are strictly prohibited.
+- `buildContract()`: Instantiates `new Contract(witnesses)` from managed artifacts with 5 ZK witnesses.
+- Circuit execution: Invokes `contract.circuits.claimWarranty(...)` directly with typed arguments before dispatching through the wallet's `submitCallTx()`.
+- Public ledger query: `fetchPublicLedgerState()` queries `https://indexer.preview.midnight.network/api/v4/graphql` and decodes the on-chain state via `ledger(state)`.
+- No simulated transaction hashes or mock address fallbacks exist in any execution path.
 
 ---
 
@@ -101,18 +146,18 @@ Contract: 0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48
 ### 3. Manufacturer Admin Console
 ![Admin Console](photos/admin.png)
 
-### 4. Vitest Unit Tests (10/10 Passing)
+### 4. Vitest Unit Tests (13/13 Passing)
 ![Test Results](photos/test.png)
 
 ---
 
-## Privacy Model — What Is and Is Not Revealed
+## Privacy Model - What Is and Is Not Revealed
 
 ### What an Observer CANNOT Learn (Strictly Private)
 
 | Private Data | ZK Witness | Location |
 |---|---|---|
-| Product Serial Number | `productSecretKey()` | Local device only — never leaves browser |
+| Product Serial Number | `productSecretKey()` | Local device only - never leaves browser |
 | Purchase Invoice / Receipt | `purchaseInvoiceHash()` | SHA-256 hashed locally before ZK proof |
 | Warranty Expiry Days | `warrantyDaysRemaining()` | Proved >= threshold in ZK; exact days hidden |
 | Warranty Proof Entropy | `warrantyProofNonce()` | Prevents replay & linkability attacks |
@@ -142,11 +187,11 @@ Contract: 0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48
 | # | Circuit | Inputs | Witnesses Used | Description |
 |---|---|---|---|---|
 | 1 | `claimWarranty` | `Bytes<32>` (productId) | productSecretKey, purchaseInvoiceHash, warrantyDaysRemaining, warrantyProofNonce | ZK warranty proof asserting days >= threshold |
-| 2 | `verifyWarranty` | `Bytes<32>` (commitment) | — | Public on-chain commitment verification |
+| 2 | `verifyWarranty` | `Bytes<32>` (commitment) | - | Public on-chain commitment verification |
 | 3 | `revokeWarranty` | `Bytes<32>` (commitment) | manufacturerSigningKey | Manufacturer revocation with ZK authority |
 | 4 | `setManufacturerCommitment` | `Uint<32>` (minDays) | manufacturerSigningKey | Anchor manufacturer authority + set threshold |
-| 5 | `resetProduct` | `Bytes<32>`, `Uint<32>` | — | Rotate product offering ID |
-| 6 | `incrementSession` | — | — | Bump session nonce (replay protection) |
+| 5 | `resetProduct` | `Bytes<32>`, `Uint<32>` | - | Rotate product offering ID |
+| 6 | `incrementSession` | - | - | Bump session nonce (replay protection) |
 
 ---
 
@@ -154,20 +199,23 @@ Contract: 0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48
 
 ### Level 2 Checklist
 - [x] **Compact Smart Contract**: Written in Compact `v0.23` with 5 private witnesses and 8 public ledger fields.
-- [x] **Midnight.js SDK**: `@midnight-ntwrk/dapp-connector-api`, `@midnight-ntwrk/midnight-js-network-id`, `@midnight-ntwrk/compact-runtime` wired into `src/lib/contract.ts`.
+- [x] **Midnight.js SDK**: `@midnight-ntwrk/dapp-connector-api`, `@midnight-ntwrk/midnight-js-network-id`, `@midnight-ntwrk/compact-runtime`, `@midnight-ntwrk/midnight-js-contracts` integrated.
 - [x] **Real Wallet Connection**: `provider.connect("preview")` triggers actual Midnight Lace extension approval popup.
 - [x] **setNetworkId()**: Called on module load with `"preview"` network identifier.
 - [x] **Contract Instantiation**: `new Contract(witnesses)` from managed artifacts with all 5 ZK witnesses.
-- [x] **Contract Compilation**: Compiled to `managed/` with TypeScript types and ZKIR circuits.
-- [x] **Local Unit Tests**: 10/10 Vitest tests passing.
-- [x] **On-Chain Deployment**: Deployed to Midnight Preview at `0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48`.
+- [x] **Contract Compilation**: Compiled to `managed/` with TypeScript types, contract-info, and ZKIR circuits.
+- [x] **Local Unit Tests**: 13/13 Vitest tests passing.
+- [x] **On-Chain Deployment**: Deployed to Midnight Preview at `0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a`.
 
 ### Level 3 Checklist
-- [x] **No Random Hash Simulation**: All `randomHash()` calls removed — deterministic commitment derivation from witness inputs.
-- [x] **No Fabricated Wallet Address**: Fallback throws `Error` if address cannot be resolved — no invented `mn1_xxxx_timestamp` strings.
-- [x] **No Fake Deploy Script**: `src/integration/deploy.ts` uses `setNetworkId()` and references verified contract address.
-- [x] **Real DApp Connector Flow**: Full `getBrowserWalletProvider() -> connect() -> resolveAddress()` chain from Midnight.js API.
-- [x] **Consistent Contract Address**: Same `0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48` in `src/lib/contract.ts`, `src/integration/deploy.ts`, and README.
-- [x] **YouTube Demo Video**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw) — shows wallet connect + successful circuit call.
-- [x] **CI Pipeline**: GitHub Actions verifies contract source, managed artifacts, Vitest (10/10), and Next.js build.
+- [x] **No Simulation/Fallback Paths**: Removed all simulation/fallback paths and mock `deriveCommitment()` hashes from `src/lib/contract.ts`. Real wallet submission and network response required.
+- [x] **Official `deployContract()` API**: Authoritative deployment script `src/integration/deploy.ts` uses the official Midnight `deployContract()` API from `@midnight-ntwrk/midnight-js-contracts`.
+- [x] **Regenerated `managed/` Artifacts**: Generated proper managed artifacts for all 6 circuits from `confidential_product_warranty.compact` and deleted all unrelated Anonymous Exam artifacts.
+- [x] **Direct Circuit Invocation**: Frontend executes generated contract circuits directly (`contract.circuits.claimWarranty(...)`) rather than sending generic ad-hoc payloads.
+- [x] **Live Indexer State Query**: Real public ledger state queried from Midnight Preview GraphQL indexer without fabricated fallbacks.
+- [x] **Consistent Contract Address**: Single verified contract address `0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a` used across README, explorer page, integration code, and deployment records.
+- [x] **No Fabricated Wallet Addresses**: Only authentic wallet addresses returned by the connected extension are accepted.
+- [x] **Compact Verification in CI**: GitHub Actions pipeline verifies Compact contract source, AST alignment, and circuit artifacts (`npm run compile:compact`).
+- [x] **Deployment Security Documented**: Manual deployment security design (protecting offline manufacturer private keys from automated CI environments) fully documented.
+- [x] **YouTube Demo Video**: [https://youtu.be/rnHPdSnrsLw](https://youtu.be/rnHPdSnrsLw) demonstrates wallet connect, ZK witness loading, and on-chain circuit submission.
 - [x] **Vercel Live Demo**: [https://confidential-product-warranty-verification.vercel.app/](https://confidential-product-warranty-verification.vercel.app/)

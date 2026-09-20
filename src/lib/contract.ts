@@ -1,13 +1,13 @@
-﻿"use client";
+"use client";
 
 // ============================================================================
-// CONFIDENTIAL PRODUCT WARRANTY VERIFICATION (CPWV) — MIDNIGHT.JS SDK CLIENT
+// CONFIDENTIAL PRODUCT WARRANTY VERIFICATION (CPWV) - MIDNIGHT.JS SDK CLIENT
 // ============================================================================
-// Real DApp Connector + Midnight.js transaction/proof flow.
+// Real DApp Connector + Midnight.js transaction & proof flow.
 // Uses @midnight-ntwrk/dapp-connector-api for wallet connection.
 // Uses @midnight-ntwrk/midnight-js-network-id for setNetworkId().
 // Uses @midnight-ntwrk/compact-runtime + managed Contract for circuit calls.
-// CONTRACT: 0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48
+// CONTRACT: 0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a
 // NETWORK:  Midnight Preview Testnet
 // ============================================================================
 
@@ -18,11 +18,11 @@ import type {
   ServiceUriConfig,
 } from "@midnight-ntwrk/dapp-connector-api";
 import { setNetworkId } from "@midnight-ntwrk/midnight-js-network-id";
-import { Contract, ledger, type Witnesses } from "../../managed/contract/index.js";
+import { Contract, ledger, type Witnesses, type Ledger } from "../../managed/contract/index.js";
 
-// ── Verified On-Chain Contract Address (Midnight Preview Testnet) ─────────────
+// Authoritative On-Chain Contract Address (Midnight Preview Testnet)
 export const CONTRACT_ADDRESS =
-  "0x748fc516e78a3a6c2115a85ec5c9fd7642c73e6a03b074d7635bd276cd388b48";
+  "0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a";
 
 export interface NetworkConfiguration {
   networkId: string;
@@ -47,37 +47,39 @@ export const NETWORK_CONFIG: NetworkConfiguration = {
 try {
   setNetworkId(NETWORK_CONFIG.networkId);
 } catch {
-  // already set — safe to ignore
+  // already set - safe to ignore
 }
 
-// ── Deterministic commitment hash (no random — reproducible from inputs) ──────
-function deriveCommitment(parts: string[]): string {
-  let acc = 0x811c9dc5;
-  const combined = parts.join("::");
-  for (let i = 0; i < combined.length; i++) {
-    acc ^= combined.charCodeAt(i);
-    acc = (acc * 0x01000193) >>> 0;
-  }
-  const hexParts = combined.substring(0, 28);
-  let hexBody = "";
-  for (let i = 0; i < hexParts.length; i++) {
-    hexBody += hexParts.charCodeAt(i).toString(16).padStart(2, "0");
-  }
-  return "0x" + acc.toString(16).padStart(8, "0") + hexBody.padEnd(56, "0");
+// Convert Uint8Array to hex string (0x...)
+export function bytesToHex(bytes: Uint8Array): string {
+  return "0x" + Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// ── Text -> 32-byte Uint8Array ────────────────────────────────────────────────
-function strToBytes32(str: string): Uint8Array {
+// Convert hex string to 32-byte Uint8Array
+export function hexToBytes(hex: string): Uint8Array {
+  const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
+  const bytes = new Uint8Array(32);
+  for (let i = 0; i < Math.min(32, Math.floor(clean.length / 2)); i++) {
+    bytes[i] = parseInt(clean.substring(i * 2, i * 2 + 2), 16) || 0;
+  }
+  return bytes;
+}
+
+// Text or Hex -> 32-byte Uint8Array
+export function strToBytes32(str: string): Uint8Array {
+  if (str.startsWith("0x") && str.length === 66) {
+    return hexToBytes(str);
+  }
   const enc = new TextEncoder();
   const arr = new Uint8Array(32);
   arr.set(enc.encode(str).subarray(0, 32));
   return arr;
 }
 
-// ── Main CPWV Client ──────────────────────────────────────────────────────────
+// Main CPWV Client
 export class ConfidentialWarrantyClient {
-  private contractAddress: string;
-  private networkConfig: NetworkConfiguration;
+  public contractAddress: string;
+  public networkConfig: NetworkConfiguration;
   private isConnected = false;
   private connectedAddress: string | null = null;
   private walletApi: ConnectedAPI | any = null;
@@ -103,7 +105,7 @@ export class ConfidentialWarrantyClient {
     }
   }
 
-  // ── Setters (called from UI before circuit invocations) ───────────────────
+  // Setters (called from UI before circuit invocations)
   public setProductSecretKey(k: string) { this._productSecretKey = k; }
   public setPurchaseInvoice(i: string)  { this._purchaseInvoice = i; }
   public setWarrantyDays(d: number)     { this._warrantyDays = d; }
@@ -112,11 +114,19 @@ export class ConfidentialWarrantyClient {
   public getNetworkConfig(): NetworkConfiguration { return this.networkConfig; }
   public getContractAddress(): string { return this.contractAddress; }
 
-  // ── Instantiate managed Contract with 5 ZK witnesses ─────────────────────
-  private buildContract(): Contract<any> {
+  // Instantiate managed Contract with 5 ZK witnesses
+  public buildContract(): Contract<any> {
     const witnesses: Witnesses<any> = {
-      productSecretKey:    (ctx) => [ctx, strToBytes32(this._productSecretKey)],
-      warrantyProofNonce:  (ctx) => [ctx, strToBytes32(`nonce::${this._productSecretKey}::${Date.now()}`)],
+      productSecretKey: (ctx) => [ctx, strToBytes32(this._productSecretKey)],
+      warrantyProofNonce: (ctx) => {
+        const nonce = new Uint8Array(32);
+        if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+          crypto.getRandomValues(nonce);
+        } else {
+          nonce.set(strToBytes32(`nonce::${Date.now()}`));
+        }
+        return [ctx, nonce];
+      },
       purchaseInvoiceHash: (ctx) => [ctx, strToBytes32(this._purchaseInvoice)],
       warrantyDaysRemaining: (ctx) => [ctx, BigInt(this._warrantyDays)],
       manufacturerSigningKey: (ctx) => [ctx, strToBytes32(this._manufacturerKey)],
@@ -124,7 +134,7 @@ export class ConfidentialWarrantyClient {
     return new Contract(witnesses);
   }
 
-  // ── Extension / Browser Wallet Detection (Midnight Lace / 1AM) ───────────
+  // Extension / Browser Wallet Detection (Midnight Lace / 1AM)
   public getBrowserWalletProvider(): InitialAPI | any {
     if (typeof window === "undefined") return null;
     const w = window as any;
@@ -133,7 +143,7 @@ export class ConfidentialWarrantyClient {
       if (w.midnight.lace)   return w.midnight.lace;
       for (const key of Object.keys(w.midnight)) {
         const c = w.midnight[key];
-        if (c && (typeof c.connect === "function" || typeof c.enable === "function")) return c;
+        if (c && (typeof c.connect === "function" || typeof c.enable === "function" || typeof c.submitCallTx === "function")) return c;
       }
       if (typeof w.midnight.connect === "function" || typeof w.midnight.enable === "function")
         return w.midnight;
@@ -144,7 +154,7 @@ export class ConfidentialWarrantyClient {
     return null;
   }
 
-  // ── connectWallet — triggers real extension popup, resolves wallet address ─
+  // connectWallet - triggers real extension popup, resolves wallet address without fabricated fallbacks
   public async connectWallet(): Promise<{
     connected: boolean;
     walletAddress: string;
@@ -156,7 +166,7 @@ export class ConfidentialWarrantyClient {
     const provider = this.getBrowserWalletProvider();
     if (!provider)
       throw new Error(
-        "Midnight Lace / 1AM Wallet not detected. Please install and unlock the extension."
+        "Midnight Lace / 1AM Wallet not detected. Please install and unlock the Midnight browser extension on Midnight Preview Testnet."
       );
 
     // Trigger real approval popup via DApp Connector API
@@ -172,12 +182,16 @@ export class ConfidentialWarrantyClient {
     } else {
       connectedApi = provider;
     }
+
+    if (!connectedApi) {
+      throw new Error("Wallet connection was rejected or cancelled by user.");
+    }
     this.walletApi = connectedApi;
 
     // Resolve real wallet address from connected API
     const resolveAddr = (obj: any): string | null => {
       if (!obj) return null;
-      if (typeof obj === "string" && obj.trim().length > 0) return obj;
+      if (typeof obj === "string" && obj.trim().length > 0) return obj.trim();
       if (typeof obj === "object") {
         if (Array.isArray(obj) && obj.length > 0) return resolveAddr(obj[0]);
         return (
@@ -214,17 +228,11 @@ export class ConfidentialWarrantyClient {
     }
     if (!address) address = resolveAddr(connectedApi) || resolveAddr(provider);
 
-    // If wallet connected but address format is unavailable (some wallets),
-    // use the wallet identifier — do NOT fabricate a random fallback address.
+    // Genuine address verification - DO NOT FABRICATE MOCK ADDRESS
     if (!address) {
-      const walletId = provider.rdns || provider.name || "";
-      if (walletId) {
-        address = `mn_preview1_${walletId.replace(/[^a-z0-9_]/gi, "").toLowerCase()}_connected`;
-      } else {
-        throw new Error(
-          "Wallet connected but address could not be resolved. Please ensure Midnight Lace is set to Preview network."
-        );
-      }
+      throw new Error(
+        "Midnight Lace wallet connected, but active account address could not be resolved. Please verify Midnight Lace is unlocked with an active account on Midnight Preview Testnet."
+      );
     }
 
     this.isConnected = true;
@@ -255,8 +263,25 @@ export class ConfidentialWarrantyClient {
     return { connected: this.isConnected, address: this.connectedAddress };
   }
 
-  // ── Circuit 1: claimWarranty(Bytes<32>) ───────────────────────────────────
-  // Proves product ownership + warranty validity without revealing serial/receipt.
+  // Ensure wallet connection is ready or throw actionable error
+  private async ensureWalletConnected(): Promise<ConnectedAPI | any> {
+    if (this.walletApi && this.isConnected) {
+      return this.walletApi;
+    }
+    if (typeof window !== "undefined") {
+      const provider = this.getBrowserWalletProvider();
+      if (provider) {
+        await this.connectWallet();
+        if (this.walletApi) return this.walletApi;
+      }
+    }
+    throw new Error(
+      "Midnight Lace / 1AM Wallet is not connected. Please connect your Midnight wallet on Preview Testnet to execute this on-chain transaction."
+    );
+  }
+
+  // Circuit 1: claimWarranty(Bytes<32>)
+  // Proves product ownership + warranty validity in ZK without revealing serial or receipt.
   public async claimWarranty(expectedProductId: string): Promise<{
     txHash: string;
     commitmentHex: string;
@@ -265,123 +290,353 @@ export class ConfidentialWarrantyClient {
     txFee: string;
     txFeeAsset: string;
   }> {
-    // Build circuit with real witnesses
-    this.buildContract();
+    const api = await this.ensureWalletConnected();
+    const contract = this.buildContract();
 
-    // Attempt real wallet-signed circuit call if wallet is connected
-    if (this.walletApi && typeof this.walletApi.submitCallTx === "function") {
-      try {
-        const txRes = await this.walletApi.submitCallTx({
-          contractAddress: this.contractAddress,
-          circuitId: "claimWarranty",
-          args: [expectedProductId],
-        });
-        const txId =
-          txRes?.public?.txId ||
-          txRes?.txId ||
-          deriveCommitment(["tx", expectedProductId, String(Date.now())]);
-        const commitment =
-          txRes?.commitment ||
-          deriveCommitment([
-            "cpw:warranty:v2",
-            this._productSecretKey,
-            this._purchaseInvoice,
-            expectedProductId,
-          ]);
-        return {
-          txHash: txId,
-          commitmentHex: commitment,
-          daysRequirementMet: this._warrantyDays >= 30,
-          signedBy: this.connectedAddress!,
-          txFee: "0.0042",
-          txFeeAsset: "tDUST",
-        };
-      } catch (e) {
-        console.warn("[CPWV] submitCallTx not available, using proof simulation:", e);
-      }
+    // Verify local threshold constraint
+    if (this._warrantyDays < 30) {
+      throw new Error(
+        `Warranty Expired: active days (${this._warrantyDays}) is below the required 30-day threshold.`
+      );
     }
 
-    // Deterministic proof simulation (no Math.random / crypto.getRandomValues)
-    const commitment = deriveCommitment([
-      "cpw:warranty:v2",
-      this._productSecretKey,
-      this._purchaseInvoice,
-      expectedProductId,
-      String(this._warrantyDays),
-    ]);
-    const txHash = deriveCommitment(["cpw:tx", commitment, NETWORK_CONFIG.networkId]);
+    const expectedProductIdBytes = strToBytes32(expectedProductId);
+    const circuitCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: {
+        contractAddress: this.contractAddress,
+        networkId: this.networkConfig.networkId,
+      },
+    };
+
+    // Invoke the generated contract's actual circuit
+    const circuitRes = contract.circuits.claimWarranty(circuitCtx as any, expectedProductIdBytes);
+
+    // Submit transaction via Midnight Wallet API
+    let txRes: any = null;
+    if (typeof api.submitCallTx === "function") {
+      txRes = await api.submitCallTx({
+        contractAddress: this.contractAddress,
+        circuitId: "claimWarranty",
+        args: [expectedProductIdBytes],
+      });
+    } else if (typeof api.callTx === "function") {
+      txRes = await api.callTx({
+        contractAddress: this.contractAddress,
+        circuitId: "claimWarranty",
+        args: [expectedProductIdBytes],
+      });
+    } else {
+      throw new Error("Connected wallet does not support submitCallTx. Please update Midnight Lace.");
+    }
+
+    const txId = txRes?.public?.txId || txRes?.txId || txRes?.transactionId;
+    if (!txId) {
+      throw new Error("Transaction submission failed: no transaction ID returned by Midnight Network.");
+    }
+
+    const commitmentHex = txRes?.commitment || bytesToHex(circuitRes.result);
 
     return {
-      txHash,
-      commitmentHex: commitment,
-      daysRequirementMet: this._warrantyDays >= 30,
-      signedBy: this.connectedAddress || "mn_preview1_lace_connected",
+      txHash: txId,
+      commitmentHex,
+      daysRequirementMet: true,
+      signedBy: this.connectedAddress!,
       txFee: "0.0042",
       txFeeAsset: "tDUST",
     };
   }
 
-  // ── Circuit 2: verifyWarranty(Bytes<32>) ──────────────────────────────────
+  // Circuit 2: verifyWarranty(Bytes<32>)
   public async verifyWarranty(commitment: string): Promise<{
     matches: boolean;
     txHash: string;
   }> {
-    const txHash = deriveCommitment(["cpw:verify", commitment, NETWORK_CONFIG.networkId]);
-    const matches = commitment.startsWith("0x") && commitment.length >= 10;
-    return { matches, txHash };
+    const api = await this.ensureWalletConnected();
+    const contract = this.buildContract();
+
+    const commitmentBytes = strToBytes32(commitment);
+    const circuitCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: {
+        contractAddress: this.contractAddress,
+        networkId: this.networkConfig.networkId,
+      },
+    };
+
+    const circuitRes = contract.circuits.verifyWarranty(circuitCtx as any, commitmentBytes);
+
+    let txRes: any = null;
+    if (typeof api.submitCallTx === "function") {
+      txRes = await api.submitCallTx({
+        contractAddress: this.contractAddress,
+        circuitId: "verifyWarranty",
+        args: [commitmentBytes],
+      });
+    } else if (typeof api.callTx === "function") {
+      txRes = await api.callTx({
+        contractAddress: this.contractAddress,
+        circuitId: "verifyWarranty",
+        args: [commitmentBytes],
+      });
+    } else {
+      throw new Error("Connected wallet does not support submitCallTx.");
+    }
+
+    const txId = txRes?.public?.txId || txRes?.txId || txRes?.transactionId;
+    if (!txId) {
+      throw new Error("Verification transaction failed: no transaction ID returned by Midnight Network.");
+    }
+
+    const matches = txRes?.result !== undefined ? Boolean(txRes.result) : Boolean(circuitRes.result);
+    return { matches, txHash: txId };
   }
 
-  // ── Circuit 3: revokeWarranty(Bytes<32>) ──────────────────────────────────
+  // Circuit 3: revokeWarranty(Bytes<32>)
   public async revokeWarranty(commitment: string): Promise<{
     txHash: string;
     revokedCommitment: string;
   }> {
-    const revokedCommitment = deriveCommitment([
-      "cpw:revoked",
-      commitment,
-      this._manufacturerKey,
-    ]);
-    const txHash = deriveCommitment(["cpw:tx:revoke", revokedCommitment]);
-    return { txHash, revokedCommitment };
+    const api = await this.ensureWalletConnected();
+    const contract = this.buildContract();
+
+    const commitmentBytes = strToBytes32(commitment);
+    const circuitCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: {
+        contractAddress: this.contractAddress,
+        networkId: this.networkConfig.networkId,
+      },
+    };
+
+    const circuitRes = contract.circuits.revokeWarranty(circuitCtx as any, commitmentBytes);
+
+    let txRes: any = null;
+    if (typeof api.submitCallTx === "function") {
+      txRes = await api.submitCallTx({
+        contractAddress: this.contractAddress,
+        circuitId: "revokeWarranty",
+        args: [commitmentBytes],
+      });
+    } else if (typeof api.callTx === "function") {
+      txRes = await api.callTx({
+        contractAddress: this.contractAddress,
+        circuitId: "revokeWarranty",
+        args: [commitmentBytes],
+      });
+    } else {
+      throw new Error("Connected wallet does not support submitCallTx.");
+    }
+
+    const txId = txRes?.public?.txId || txRes?.txId || txRes?.transactionId;
+    if (!txId) {
+      throw new Error("Revocation transaction failed: no transaction ID returned by Midnight Network.");
+    }
+
+    return {
+      txHash: txId,
+      revokedCommitment: txRes?.revokedCommitment || bytesToHex(circuitRes.result),
+    };
   }
 
-  // ── Circuit 4: setManufacturerCommitment(Uint<32>) ────────────────────────
+  // Circuit 4: setManufacturerCommitment(Uint<32>)
   public async setManufacturerCommitment(days: number): Promise<{
     txHash: string;
     manufacturerCommitment: string;
     newMinimumDays: number;
   }> {
-    const manufacturerCommitment = deriveCommitment([
-      "cpw:manufacturer:authority:v1",
-      this._manufacturerKey,
-    ]);
-    const txHash = deriveCommitment(["cpw:tx:setMfr", manufacturerCommitment, String(days)]);
-    return { txHash, manufacturerCommitment, newMinimumDays: days };
+    const api = await this.ensureWalletConnected();
+    const contract = this.buildContract();
+
+    const circuitCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: {
+        contractAddress: this.contractAddress,
+        networkId: this.networkConfig.networkId,
+      },
+    };
+
+    const circuitRes = contract.circuits.setManufacturerCommitment(circuitCtx as any, BigInt(days));
+
+    let txRes: any = null;
+    if (typeof api.submitCallTx === "function") {
+      txRes = await api.submitCallTx({
+        contractAddress: this.contractAddress,
+        circuitId: "setManufacturerCommitment",
+        args: [BigInt(days)],
+      });
+    } else if (typeof api.callTx === "function") {
+      txRes = await api.callTx({
+        contractAddress: this.contractAddress,
+        circuitId: "setManufacturerCommitment",
+        args: [BigInt(days)],
+      });
+    } else {
+      throw new Error("Connected wallet does not support submitCallTx.");
+    }
+
+    const txId = txRes?.public?.txId || txRes?.txId || txRes?.transactionId;
+    if (!txId) {
+      throw new Error("Authority registration failed: no transaction ID returned by Midnight Network.");
+    }
+
+    return {
+      txHash: txId,
+      manufacturerCommitment: txRes?.manufacturerCommitment || bytesToHex(circuitRes.result),
+      newMinimumDays: days,
+    };
   }
 
-  // ── Circuit 5: resetProduct(Bytes<32>, Uint<32>) ──────────────────────────
+  // Circuit 5: resetProduct(Bytes<32>, Uint<32>)
   public async resetProduct(newProductId: string, newMinimumDays: number): Promise<{
     txHash: string;
     newProductId: string;
     newMinimumDays: number;
   }> {
-    const txHash = deriveCommitment(["cpw:tx:resetProduct", newProductId, String(newMinimumDays)]);
-    return { txHash, newProductId, newMinimumDays };
+    const api = await this.ensureWalletConnected();
+    const contract = this.buildContract();
+
+    const newProductIdBytes = strToBytes32(newProductId);
+    const circuitCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: {
+        contractAddress: this.contractAddress,
+        networkId: this.networkConfig.networkId,
+      },
+    };
+
+    contract.circuits.resetProduct(circuitCtx as any, newProductIdBytes, BigInt(newMinimumDays));
+
+    let txRes: any = null;
+    if (typeof api.submitCallTx === "function") {
+      txRes = await api.submitCallTx({
+        contractAddress: this.contractAddress,
+        circuitId: "resetProduct",
+        args: [newProductIdBytes, BigInt(newMinimumDays)],
+      });
+    } else if (typeof api.callTx === "function") {
+      txRes = await api.callTx({
+        contractAddress: this.contractAddress,
+        circuitId: "resetProduct",
+        args: [newProductIdBytes, BigInt(newMinimumDays)],
+      });
+    } else {
+      throw new Error("Connected wallet does not support submitCallTx.");
+    }
+
+    const txId = txRes?.public?.txId || txRes?.txId || txRes?.transactionId;
+    if (!txId) {
+      throw new Error("Product reset transaction failed: no transaction ID returned by Midnight Network.");
+    }
+
+    return {
+      txHash: txId,
+      newProductId,
+      newMinimumDays,
+    };
   }
 
-  // ── Circuit 6: incrementSession() ────────────────────────────────────────
+  // Circuit 6: incrementSession()
   public async incrementSession(): Promise<{ txHash: string }> {
-    const txHash = deriveCommitment([
-      "cpw:tx:session",
-      this.contractAddress,
-      NETWORK_CONFIG.networkId,
-      String(Date.now()),
-    ]);
-    return { txHash };
+    const api = await this.ensureWalletConnected();
+    const contract = this.buildContract();
+
+    const circuitCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: {
+        contractAddress: this.contractAddress,
+        networkId: this.networkConfig.networkId,
+      },
+    };
+
+    contract.circuits.incrementSession(circuitCtx as any);
+
+    let txRes: any = null;
+    if (typeof api.submitCallTx === "function") {
+      txRes = await api.submitCallTx({
+        contractAddress: this.contractAddress,
+        circuitId: "incrementSession",
+        args: [],
+      });
+    } else if (typeof api.callTx === "function") {
+      txRes = await api.callTx({
+        contractAddress: this.contractAddress,
+        circuitId: "incrementSession",
+        args: [],
+      });
+    } else {
+      throw new Error("Connected wallet does not support submitCallTx.");
+    }
+
+    const txId = txRes?.public?.txId || txRes?.txId || txRes?.transactionId;
+    if (!txId) {
+      throw new Error("Increment session failed: no transaction ID returned by Midnight Network.");
+    }
+
+    return { txHash: txId };
+  }
+
+  // Query genuine public ledger state from the actual Preview indexer (no fabricated fallbacks)
+  public async fetchPublicLedgerState(contractAddress: string = this.contractAddress): Promise<{
+    claimCount: bigint;
+    revokedCount: bigint;
+    activeSession: bigint;
+    productId: string;
+    manufacturerCommitment: string;
+    lastClaimCommitment: string;
+    lastRevokedCommitment: string;
+    minimumRequiredDays: bigint;
+    rawStateLength: number;
+  }> {
+    const cleanAddress = contractAddress.toLowerCase();
+    const query = `
+      query GetContractState($address: String!) {
+        contract(address: $address) {
+          address
+          state
+        }
+      }
+    `;
+
+    const res = await fetch(this.networkConfig.indexerUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        variables: { address: cleanAddress },
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Midnight Preview Indexer HTTP error: ${res.status} ${res.statusText}`);
+    }
+
+    const json = await res.json();
+    if (json.errors && json.errors.length > 0) {
+      throw new Error(`GraphQL query error from indexer: ${json.errors.map((e: any) => e.message).join(", ")}`);
+    }
+
+    const rawState = json?.data?.contract?.state;
+    if (!rawState) {
+      throw new Error(`No on-chain state found for contract ${contractAddress} on Midnight Preview Indexer.`);
+    }
+
+    const parsed = ledger(rawState);
+    return {
+      claimCount: parsed.claimCount,
+      revokedCount: parsed.revokedCount,
+      activeSession: parsed.activeSession,
+      productId: bytesToHex(parsed.productId),
+      manufacturerCommitment: bytesToHex(parsed.manufacturerCommitment),
+      lastClaimCommitment: bytesToHex(parsed.lastClaimCommitment),
+      lastRevokedCommitment: bytesToHex(parsed.lastRevokedCommitment),
+      minimumRequiredDays: parsed.minimumRequiredDays,
+      rawStateLength: rawState.length,
+    };
   }
 }
 
-// ── Singleton factory ─────────────────────────────────────────────────────────
+// Singleton factory
 let _client: ConfidentialWarrantyClient | null = null;
 export function getClient(): ConfidentialWarrantyClient {
   if (!_client) _client = new ConfidentialWarrantyClient();
