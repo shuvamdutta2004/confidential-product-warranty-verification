@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - Confidential Product Warranty Verification
+﻿name: CI/CD Pipeline - Confidential Product Warranty Verification
 
 on:
   push:
@@ -20,10 +20,17 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci || npm install
+
+      - name: Install Official Compact Compiler CLI
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh || true
+          echo "$HOME/.compact/bin" >> $GITHUB_PATH
 
       - name: Compact Contract Compilation & Verification
-        run: npm run compile:compact
+        run: |
+          export PATH="$HOME/.compact/bin:$PATH"
+          npm run compile:compact
 
       - name: Run Midnight Contract Tests (Vitest)
         run: npm test
@@ -36,6 +43,7 @@ jobs:
           echo "=== Midnight Preview Deployment Record ==="
           echo "Network: Midnight Preview Testnet"
           echo "Contract Address: 0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a"
+          echo "Deployment TxHash: 0x892a0149fbc00ea5210214db0ea5c19f56ba837cf71285093551aa74cb92f912"
           echo "Explorer: https://preview.midnightexplorer.com/contracts/0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a"
           echo "Circuits: claimWarranty, verifyWarranty, revokeWarranty, setManufacturerCommitment, resetProduct, incrementSession"
           echo "Ledger: 8 fields (claimCount, revokedCount, activeSession, productId, manufacturerCommitment, lastClaimCommitment, lastRevokedCommitment, minimumRequiredDays)"

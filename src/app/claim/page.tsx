@@ -1,4 +1,5 @@
 ﻿"use client";
+
 import { useState } from "react";
 import { getClient } from "../../lib/contract";
 import Link from "next/link";
@@ -17,37 +18,60 @@ export default function ClaimPage() {
   const [logs, setLogs] = useState<{ msg: string; type: string }[]>([]);
 
   const MINIMUM_REQUIRED_DAYS = 30;
-  const addLog = (msg: string, type = "info") => setLogs(l => [...l, { msg, type }]);
+  const addLog = (msg: string, type = "info") => setLogs((l) => [...l, { msg, type }]);
 
   const handleClaim = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setError(null); setResult(null); setLogs([]);
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    setLogs([]);
+
+    // Strict validation: No default secret fallbacks
+    if (!productSecretKey.trim()) {
+      setError("Product Serial Key / Secret is required for zero-knowledge warranty claim generation.");
+      setLoading(false);
+      return;
+    }
+    if (!purchaseInvoice.trim()) {
+      setError("Purchase Invoice / Store Receipt Hash is required to prove valid authorized purchase.");
+      setLoading(false);
+      return;
+    }
+
     try {
       addLog("> [WALLET] Connecting to Midnight Lace Wallet...", "info");
       const client = getClient();
-      client.setProductSecretKey(productSecretKey || "serial_secret_macbook_pro_2026");
-      client.setPurchaseInvoice(purchaseInvoice || "invoice_receipt_store_09182");
+      client.setProductSecretKey(productSecretKey.trim());
+      client.setPurchaseInvoice(purchaseInvoice.trim());
       client.setWarrantyDays(warrantyDays);
 
-      addLog("> [ZK WITNESS] productSecretKey() — private serial key generated locally", "info");
-      addLog("> [ZK WITNESS] warrantyProofNonce() — random entropy salt for replay protection", "info");
-      addLog("> [ZK WITNESS] purchaseInvoiceHash() — SHA-256 hash of receipt & invoice", "info");
-      addLog(`> [ZK WITNESS] warrantyDaysRemaining() — ${warrantyDays} days balance vs. ${MINIMUM_REQUIRED_DAYS} days requirement`, "info");
-      addLog(`> [ZK THRESHOLD] Asserting warrantyDaysRemaining >= minimumRequiredDays privately...`, "info");
+      addLog("> [ZK WITNESS] productSecretKey() - private serial key bound locally on customer device", "info");
+      addLog("> [ZK WITNESS] warrantyProofNonce() - cryptographic entropy blinding salt generated", "info");
+      addLog("> [ZK WITNESS] purchaseInvoiceHash() - cryptographic hash of receipt & store invoice", "info");
+      addLog(`> [ZK WITNESS] warrantyDaysRemaining() - ${warrantyDays} days balance vs. ${MINIMUM_REQUIRED_DAYS} days requirement`, "info");
+      addLog("> [ZK THRESHOLD] Asserting warrantyDaysRemaining >= minimumRequiredDays privately...", "info");
 
       if (warrantyDays < MINIMUM_REQUIRED_DAYS) {
-        addLog(`> [REJECTED] ${warrantyDays} active days < ${MINIMUM_REQUIRED_DAYS} days requirement — circuit would reject proof`, "error");
+        addLog(`> [REJECTED] Active days (${warrantyDays}) < ${MINIMUM_REQUIRED_DAYS} days requirement - circuit rejects expired claim`, "error");
         setError(`Warranty Expired: ${warrantyDays} active days is below the required ${MINIMUM_REQUIRED_DAYS}-day threshold.`);
         return;
       }
 
-      addLog("> [CIRCUIT] Executing claimWarranty(Bytes<32>) on Midnight Network...", "info");
+      addLog("> [CIRCUIT] Executing claimWarranty(expectedProductId) on Midnight Network...", "info");
       const res = await client.claimWarranty(productId);
-      setResult(res);
-      addLog(`> [SUCCESS] Warranty claim verified & signed! TxHash: ${res.txHash}`, "success");
-      addLog(`> [COMMITMENT] ZK Warranty Commitment: ${res.commitmentHex}`, "success");
-      addLog(`> [PRIVACY] Product serial number, receipt details, customer identity — NEVER disclosed on-chain`, "success");
-      addLog(`> [FEE] Transaction fee: ${res.txFee} ${res.txFeeAsset}`, "info");
+
+      addLog(`> [SUBMITTED] Midnight Transaction Dispatched! TxHash: ${res.txHash}`, "info");
+      addLog(`> [COMMITMENT] ZK Warranty Commitment: ${res.commitmentHex}`, "info");
+      addLog("> [INDEXER] Confirming transaction inclusion on Midnight Preview Indexer...", "info");
+
+      const confirmation = await client.waitForTransactionConfirmation(res.txHash);
+      if (confirmation.confirmed) {
+        addLog(`> [CONFIRMED] Transaction inclusion confirmed on Midnight Preview Testnet! Block: ${confirmation.blockHeight ?? "Finalized"}`, "success");
+      }
+
+      setResult({ ...res, blockHeight: confirmation.blockHeight });
+      addLog("> [PRIVACY] Product serial number, receipt details, customer identity - NEVER disclosed on-chain", "success");
     } catch (err: any) {
       const msg = err?.message || "Warranty claim failed.";
       setError(msg);
@@ -59,15 +83,20 @@ export default function ClaimPage() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    setVerifyLoading(true); setVerifyResult(null);
+    if (!claimedCommitment.trim()) return;
+    setVerifyLoading(true);
+    setVerifyResult(null);
+
     try {
-      addLog("> [CIRCUIT] Executing verifyWarranty(Bytes<32>) on-chain...", "info");
-      const res = await getClient().verifyWarranty(claimedCommitment);
+      addLog(`> [CIRCUIT] Executing verifyWarranty(claimedCommitment) on-chain...`, "info");
+      const res = await getClient().verifyWarranty(claimedCommitment.trim());
       setVerifyResult(res);
-      addLog(res.matches
-        ? "> [VERIFIED] Commitment matches on-chain record — warranty is VALID"
-        : "> [MISMATCH] Commitment does NOT match — warranty may be invalid or revoked",
-        res.matches ? "success" : "error");
+      addLog(
+        res.matches
+          ? "> [VERIFIED] Commitment matches on-chain record - warranty is VALID & AUTHENTIC"
+          : "> [MISMATCH] Commitment does NOT match on-chain record - warranty may be invalid or revoked",
+        res.matches ? "success" : "error"
+      );
     } catch (err: any) {
       addLog(`> [ERROR] ${err?.message}`, "error");
     } finally {
@@ -76,176 +105,193 @@ export default function ClaimPage() {
   };
 
   return (
-    <>
-<div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
-        <div style={{ marginBottom: "2rem" }}>
-          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
-            <span className="badge badge-amber">ZK Warranty Claim</span>
-            <span className="badge badge-purple">Midnight Preview</span>
-            <span className="badge badge-green">Coverage Assertion</span>
-          </div>
-          <h1 className="section-title" style={{ fontSize: "1.75rem" }}>File Warranty Claim Anonymously</h1>
-          <p className="section-desc">
-            Your serial number, store receipt, and customer identity stay fully private. A zero-knowledge proof verifies your remaining warranty coverage meets the required threshold — only a cryptographic commitment is disclosed on-chain.
-          </p>
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "3rem 2rem 5rem" }}>
+      <div style={{ marginBottom: "2rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.6rem" }}>
+          <span className="badge-clean badge-amber">Circuit 1 &amp; 2</span>
+          <span className="badge-clean badge-blue">Zero-Knowledge Proof</span>
         </div>
+        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "2.4rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
+          Customer Warranty Claim &amp; Verification
+        </h1>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginTop: "0.4rem" }}>
+          Generate a zero-knowledge warranty claim. Proves you possess a valid product serial and purchase receipt with sufficient active days without revealing any identifying data to the network.
+        </p>
+      </div>
 
-        {/* ── ZK Witnesses Card ── */}
-        <div className="glass-card" style={{ padding: "1.25rem", marginBottom: "1.5rem", borderLeft: "3px solid #f59e0b" }}>
-          <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#f59e0b", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            ZK Circuit Architecture — claimWarranty(Bytes&lt;32&gt;)
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}>
-            {[
-              { label: "productSecretKey()", desc: "Private serial secret key", color: "#e11d48" },
-              { label: "warrantyProofNonce()", desc: "Entropy/replay binding", color: "#f59e0b" },
-              { label: "purchaseInvoiceHash()", desc: "Hashed receipt & invoice", color: "#06b6d4" },
-              { label: "warrantyDaysRemaining()", desc: "Private active days ≥ 30", color: "#10b981" },
-            ].map(w => (
-              <div key={w.label} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "0.75rem", border: `1px solid ${w.color}33` }}>
-                <div style={{ fontFamily: "monospace", fontSize: "0.75rem", color: w.color, marginBottom: "0.25rem" }}>{w.label}</div>
-                <div style={{ fontSize: "0.7rem", color: "#64748b" }}>{w.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: "2rem" }} className="claim-layout-grid">
+        {/* Claim Form */}
+        <div className="glass-panel" style={{ padding: "2.25rem" }}>
+          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.3rem", fontWeight: 700, marginBottom: "1.5rem" }}>
+            1. File Confidential Warranty Claim
+          </h2>
 
-        {/* ── Claim Form ── */}
-        <div className="glass-card" style={{ padding: "2rem", marginBottom: "1.5rem" }}>
           <form onSubmit={handleClaim} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.5rem" }}>
-                Product Model Identifier (Bytes&lt;32&gt;) *
-              </label>
-              <input type="text" id="productId" value={productId} onChange={e => setProductId(e.target.value)}
-                placeholder="prod_macbook_pro_m3_2026" required />
-              <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.4rem" }}>Must match active product model ID on Midnight chain</p>
+              <label className="field-label">Active Product Model ID</label>
+              <input
+                type="text"
+                className="input-field"
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+                required
+              />
+              <span style={{ fontSize: "0.72rem", color: "var(--text-faint)", marginTop: "0.25rem", display: "block" }}>
+                Public on-chain identifier for the product line (e.g. MacBook Pro M3).
+              </span>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.5rem" }}>
-                Product Serial Secret Key — Private Witness
-              </label>
-              <input type="password" id="productSecretKey" value={productSecretKey} onChange={e => setProductSecretKey(e.target.value)}
-                placeholder="Your product private serial key (never transmitted)" autoComplete="off" />
-              <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.4rem" }}>
-                Calculated locally to generate <code>productSecretKey()</code> ZK witness — never sent over network
-              </p>
+              <label className="field-label">Private Product Serial Key / Secret *</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="e.g. SN-9812-4412-AAPL-M3PRO"
+                value={productSecretKey}
+                onChange={(e) => setProductSecretKey(e.target.value)}
+                required
+              />
+              <span style={{ fontSize: "0.72rem", color: "#f59e0b", marginTop: "0.25rem", display: "block" }}>
+                🔒 Shielded witness: Never broadcast on-chain. Stays on your device.
+              </span>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.5rem" }}>
-                Active Warranty Coverage Days — Private Threshold Witness
-              </label>
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <input type="range" id="warrantyDays" min={0} max={730} step={15} value={warrantyDays}
-                  onChange={e => setWarrantyDays(Number(e.target.value))}
-                  style={{ flex: 1, accentColor: warrantyDays >= MINIMUM_REQUIRED_DAYS ? "#10b981" : "#ef4444" }} />
-                <span style={{
-                  fontFamily: "monospace", fontWeight: 700, fontSize: "1rem",
-                  color: warrantyDays >= MINIMUM_REQUIRED_DAYS ? "#10b981" : "#ef4444", minWidth: "5rem"
-                }}>{warrantyDays} days</span>
-                <span style={{
-                  fontSize: "0.75rem", padding: "0.2rem 0.6rem", borderRadius: "99px",
-                  background: warrantyDays >= MINIMUM_REQUIRED_DAYS ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)",
-                  color: warrantyDays >= MINIMUM_REQUIRED_DAYS ? "#10b981" : "#ef4444"
-                }}>
-                  {warrantyDays >= MINIMUM_REQUIRED_DAYS ? "✅ ACTIVE" : "❌ EXPIRED"}
+              <label className="field-label">Purchase Invoice / Receipt Record *</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="e.g. INV-BESTBUY-2026-90412"
+                value={purchaseInvoice}
+                onChange={(e) => setPurchaseInvoice(e.target.value)}
+                required
+              />
+              <span style={{ fontSize: "0.72rem", color: "#f59e0b", marginTop: "0.25rem", display: "block" }}>
+                🔒 Shielded witness: Hashed into ZK proof. Retailer details remain private.
+              </span>
+            </div>
+
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+                <label className="field-label" style={{ marginBottom: 0 }}>Active Warranty Days Remaining</label>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: warrantyDays >= 30 ? "#10b981" : "#f43f5e", fontWeight: 700 }}>
+                  {warrantyDays} Days {warrantyDays < 30 ? "(Expired)" : "(Valid)"}
                 </span>
               </div>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.4rem" }}>
-                Compared privately via <code>warrantyDaysRemaining()</code> vs. on-chain <code>minimumRequiredDays</code> (30 days) — balance never disclosed
-              </p>
+              <input
+                type="range"
+                min="0"
+                max="730"
+                value={warrantyDays}
+                onChange={(e) => setWarrantyDays(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "#f59e0b" }}
+              />
+              <span style={{ fontSize: "0.72rem", color: "var(--text-faint)", marginTop: "0.25rem", display: "block" }}>
+                Minimum required on-chain threshold: 30 days. Circuit verifies days ≥ 30 in ZK.
+              </span>
             </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#94a3b8", marginBottom: "0.5rem" }}>
-                Purchase Receipt & Invoice Record
-              </label>
-              <textarea id="purchaseInvoice" value={purchaseInvoice} onChange={e => setPurchaseInvoice(e.target.value)}
-                placeholder="Paste store invoice/receipt payload (hashed locally via purchaseInvoiceHash() before ZK proof)"
-                rows={3} style={{ resize: "vertical" }} />
-              <p style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.4rem" }}>
-                Content is hashed locally — only SHA-256 hash enters <code>purchaseInvoiceHash()</code> ZK proof
-              </p>
-            </div>
-
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <button type="submit" className="btn-primary" disabled={loading} id="claimBtn">
-                {loading ? <><span className="spinner" /> Generating ZK Proof...</> : "File Warranty Claim (ZK Proof)"}
-              </button>
-              <Link href="/" className="btn-secondary">Back to Dashboard</Link>
-            </div>
-          </form>
-        </div>
-
-        {/* ── Logs ── */}
-        {logs.length > 0 && (
-          <div className="glass-card" style={{ padding: "1.25rem", marginBottom: "1.5rem" }}>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#64748b", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>Activity Log</div>
-            <div className="log-box">
-              {logs.map((l, i) => <div key={i} className={`log-${l.type}`}>{l.msg}</div>)}
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="glass-card fade-in" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.05)" }}>
-            <p style={{ color: "#fca5a5", fontWeight: 600 }}>Error</p>
-            <p style={{ color: "#94a3b8", marginTop: "0.5rem", fontSize: "0.9rem" }}>{error}</p>
-          </div>
-        )}
-
-        {result && (
-          <div className="glass-card fade-in" style={{ padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.05)" }}>
-            <p style={{ color: "#6ee7b7", fontWeight: 700, fontSize: "1.05rem", marginBottom: "1rem" }}>✅ Warranty Claim Verified & Confirmed On-Chain!</p>
-            {[
-              { label: "Circuit", value: "claimWarranty(Bytes<32>)" },
-              { label: "ZK Claim Commitment", value: result.commitmentHex },
-              { label: "On-Chain TxHash", value: result.txHash },
-              { label: "Days Requirement Met", value: result.daysRequirementMet ? "✅ Satisfied (private)" : "❌ Not Satisfied" },
-              { label: "Signed By", value: result.signedBy },
-              { label: "Tx Fee", value: `${result.txFee} ${result.txFeeAsset}` },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ display: "flex", gap: "1rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "0.8rem", color: "#64748b", minWidth: 160 }}>{label}:</span>
-                <span style={{ fontSize: "0.8rem", color: "#f1f5f9", fontFamily: "monospace", wordBreak: "break-all" }}>{value as string}</span>
+            {error && (
+              <div style={{ background: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.3)", borderRadius: "8px", padding: "0.8rem", color: "#f43f5e", fontSize: "0.82rem" }}>
+                {error}
               </div>
-            ))}
-            <p style={{ fontSize: "0.8rem", color: "#10b981", marginTop: "0.75rem", fontWeight: 600 }}>Status: CONFIRMED (Midnight Preview)</p>
-          </div>
-        )}
+            )}
 
-        {/* ── Verify Claim Panel ── */}
-        <div className="glass-card" style={{ padding: "1.5rem", borderLeft: "3px solid #06b6d4" }}>
-          <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#06b6d4", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            Verify Warranty Claim — verifyWarranty(Bytes&lt;32&gt;)
-          </div>
-          <p style={{ fontSize: "0.85rem", color: "#94a3b8", marginBottom: "1rem" }}>
-            Repair centers and customers can publicly verify whether a claimed commitment matches the registered warranty claim on-chain.
-          </p>
-          <form onSubmit={handleVerify} style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-            <input type="text" id="claimedCommitment" value={claimedCommitment}
-              onChange={e => setClaimedCommitment(e.target.value)}
-              placeholder="0x... claimed warranty commitment hash"
-              style={{ flex: 1, minWidth: "200px" }} />
-            <button type="submit" className="btn-secondary" disabled={verifyLoading} id="verifyBtn" style={{ whiteSpace: "nowrap" }}>
-              {verifyLoading ? <><span className="spinner" /> Verifying...</> : "Verify On-Chain"}
+            <button type="submit" disabled={loading} className="btn-pill-primary" style={{ width: "100%", marginTop: "0.5rem" }}>
+              {loading ? "Generating ZK Proof & Submitting..." : "Generate Proof & Submit Claim"}
             </button>
           </form>
-          {verifyResult && (
-            <div style={{ marginTop: "1rem", padding: "0.75rem", borderRadius: "8px",
-              background: verifyResult.matches ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
-              border: `1px solid ${verifyResult.matches ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}` }}>
-              <p style={{ color: verifyResult.matches ? "#6ee7b7" : "#fca5a5", fontWeight: 700, marginBottom: "0.5rem" }}>
-                {verifyResult.matches ? "✅ VALID — Warranty Commitment Verified On-Chain" : "❌ INVALID — Commitment Mismatch"}
-              </p>
-              <div style={{ fontSize: "0.78rem", color: "#64748b" }}>TxHash: <span style={{ color: "#f1f5f9", fontFamily: "monospace" }}>{verifyResult.txHash}</span></div>
+
+          {result && (
+            <div style={{ marginTop: "1.75rem", background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "12px", padding: "1.25rem" }}>
+              <div style={{ color: "#10b981", fontWeight: 700, fontSize: "0.9rem", marginBottom: "0.6rem" }}>
+                ✓ Claim Successfully Confirmed on Midnight Preview
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.78rem" }}>
+                <div>
+                  <span style={{ color: "var(--text-faint)" }}>Transaction Hash: </span>
+                  <span style={{ fontFamily: "var(--font-mono)", color: "#ffffff", wordBreak: "break-all" }}>{result.txHash}</span>
+                </div>
+                <div>
+                  <span style={{ color: "var(--text-faint)" }}>ZK Commitment: </span>
+                  <span style={{ fontFamily: "var(--font-mono)", color: "#f59e0b", wordBreak: "break-all" }}>{result.commitmentHex}</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
+
+        {/* Verification & Logs Column */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          {/* Verification Form */}
+          <div className="glass-panel" style={{ padding: "2rem" }}>
+            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.2rem", fontWeight: 700, marginBottom: "1rem" }}>
+              2. On-Chain Warranty Verifier
+            </h2>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "1rem" }}>
+              Public circuit checking whether a claimed commitment hash matches registered warranty commitments on-chain.
+            </p>
+
+            <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label className="field-label">ZK Warranty Commitment Hash</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="0x..."
+                  value={claimedCommitment}
+                  onChange={(e) => setClaimedCommitment(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button type="submit" disabled={verifyLoading} className="btn-pill-secondary" style={{ width: "100%" }}>
+                {verifyLoading ? "Querying Midnight Network..." : "Verify Commitment On-Chain"}
+              </button>
+            </form>
+
+            {verifyResult && (
+              <div style={{ marginTop: "1rem", padding: "0.9rem", borderRadius: "8px", background: verifyResult.matches ? "rgba(16,185,129,0.1)" : "rgba(244,63,94,0.1)", border: `1px solid ${verifyResult.matches ? "#10b981" : "#f43f5e"}` }}>
+                <div style={{ color: verifyResult.matches ? "#10b981" : "#f43f5e", fontWeight: 700, fontSize: "0.85rem" }}>
+                  {verifyResult.matches ? "✓ VALID ON-CHAIN WARRANTY" : "✗ INVALID / REVOKED WARRANTY"}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Real-Time ZK Execution Console */}
+          <div className="glass-panel" style={{ padding: "1.75rem", flex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.8rem" }}>
+              <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", textTransform: "uppercase" }}>
+                ZK Execution Console
+              </span>
+              <button onClick={() => setLogs([])} style={{ background: "transparent", border: "none", color: "var(--text-faint)", fontSize: "0.72rem", cursor: "pointer" }}>
+                Clear
+              </button>
+            </div>
+
+            <div style={{ background: "rgba(0,0,0,0.5)", borderRadius: "8px", padding: "0.9rem", minHeight: "180px", maxHeight: "280px", overflowY: "auto", fontFamily: "var(--font-mono)", fontSize: "0.75rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+              {logs.length === 0 ? (
+                <div style={{ color: "var(--text-faint)", fontStyle: "italic" }}>Awaiting circuit execution...</div>
+              ) : (
+                logs.map((l, idx) => (
+                  <div key={idx} style={{ color: l.type === "success" ? "#10b981" : l.type === "error" ? "#f43f5e" : "#94a3b8" }}>
+                    {l.msg}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+
+      <style jsx>{`
+        @media (max-width: 860px) {
+          .claim-layout-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
-

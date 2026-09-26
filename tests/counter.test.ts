@@ -1,30 +1,36 @@
-import { describe, it, expect } from 'vitest';
-import { Contract, ledger } from '../managed/contract/index.js';
-import { CONTRACT_ADDRESS, NETWORK_CONFIG, bytesToHex, hexToBytes, strToBytes32 } from '../src/lib/contract';
+﻿import { describe, it, expect } from 'vitest';
+import { Contract, ledger, type Witnesses } from '../managed/contract/index.js';
+import {
+  CONTRACT_ADDRESS,
+  CANONICAL_DEPLOYMENT,
+  NETWORK_CONFIG,
+  bytesToHex,
+  hexToBytes,
+  strToBytes32,
+  sha256Hex,
+} from '../src/lib/contract';
 import { deployCPWVContract } from '../src/integration/deploy';
 
-// --- Helpers -----------------------------------------------------------------
-
+// Helper to construct 32-byte Uint8Array from string
 function toBytes32(str: string): Uint8Array {
-  const bytes = new Uint8Array(32);
-  const encoder = new TextEncoder();
-  const encoded = encoder.encode(str);
-  bytes.set(encoded.subarray(0, 32));
-  return bytes;
+  const arr = new Uint8Array(32);
+  new TextEncoder().encodeInto(str, arr);
+  return arr;
 }
 
+// Deterministic test witness builder (Strict: No default secrets)
 function buildWitnesses(opts: {
   productKey?: string;
   nonce?: string;
   invoiceHash?: string;
   daysRemaining?: bigint;
   mfrKey?: string;
-}) {
-  const productKey = toBytes32(opts.productKey ?? 'default_product_serial_key');
-  const nonce = toBytes32(opts.nonce ?? 'default_warranty_nonce');
-  const invoiceHash = toBytes32(opts.invoiceHash ?? 'default_purchase_invoice');
+}): Witnesses<any> {
+  const productKey = toBytes32(opts.productKey ?? 'test_product_serial_secret_key');
+  const nonce = toBytes32(opts.nonce ?? 'test_entropy_nonce_warranty_99');
+  const invoiceHash = toBytes32(opts.invoiceHash ?? 'test_purchase_invoice_hash_77');
   const daysRemaining = opts.daysRemaining ?? 365n;
-  const mfrKey = toBytes32(opts.mfrKey ?? 'default_manufacturer_key');
+  const mfrKey = toBytes32(opts.mfrKey ?? 'test_manufacturer_signing_key_42');
 
   return {
     productSecretKey: (ctx: any) => [ctx.privateState ?? ctx, productKey] as [any, Uint8Array],
@@ -162,12 +168,16 @@ describe('Confidential Product Warranty Verification (CPWV) - Midnight ZK Contra
 
   it('9. Expired Warranty Fail Case: warrantyDaysRemaining below minimumRequiredDays fails threshold check', () => {
     const expiredDays = 5n;
-    const minimumRequiredDays = 30n;
     const witnesses = buildWitnesses({ daysRemaining: expiredDays });
-    const mockCtx = { privateState: {} };
+    const contract = new Contract(witnesses);
+    const mockCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: { contractAddress: CONTRACT_ADDRESS, networkId: 'preview' },
+    };
 
-    const [, days] = witnesses.warrantyDaysRemaining(mockCtx);
-    expect(days >= minimumRequiredDays).toBe(false);
+    expect(() => {
+      contract.circuits.claimWarranty(mockCtx as any, toBytes32('product_test_model'));
+    }).toThrow(/Warranty expired/i);
   });
 
   it('10. Session Isolation: witnesses built for different sessions produce independent nonce contexts', () => {
@@ -181,15 +191,19 @@ describe('Confidential Product Warranty Verification (CPWV) - Midnight ZK Contra
     expect(nonce1).not.toEqual(nonce2);
   });
 
-  it('11. Authoritative Verified Contract Address: matches Preview deployment record', () => {
+  it('11. Canonical Verified Contract Record: matches Preview deployment record', () => {
     expect(CONTRACT_ADDRESS).toBe('0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a');
+    expect(CANONICAL_DEPLOYMENT.contractAddress).toBe(CONTRACT_ADDRESS);
+    expect(CANONICAL_DEPLOYMENT.txHash).toBe('0x892a0149fbc00ea5210214db0ea5c19f56ba837cf71285093551aa74cb92f912');
+    expect(CANONICAL_DEPLOYMENT.networkId).toBe('preview');
     expect(NETWORK_CONFIG.networkId).toBe('preview');
     expect(NETWORK_CONFIG.indexerUrl).toContain('indexer.preview.midnight.network');
   });
 
-  it('12. Authoritative deployCPWVContract returns the verified contract address', async () => {
-    const res = await deployCPWVContract();
-    expect(res.contractAddress).toBe('0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a');
+  it('12. DeployContract Security: deployCPWVContract strictly requires real providers (no mock address fallbacks)', async () => {
+    await expect(deployCPWVContract(undefined as any)).rejects.toThrow(
+      /ContractProviders are strictly required for deployContract/i
+    );
   });
 
   it('13. Encoding Helpers: bytesToHex and strToBytes32 round-trip correctly', () => {
@@ -201,6 +215,113 @@ describe('Confidential Product Warranty Verification (CPWV) - Midnight ZK Contra
     expect(hex.length).toBe(66);
     const back = hexToBytes(hex);
     expect(back).toEqual(bytes);
+  });
+
+  it('14. Manufacturer Authorization: resetProduct requires valid manufacturer witness key', () => {
+    const unauthWitnesses = {
+      productSecretKey: (ctx: any) => [ctx, new Uint8Array(32)],
+      warrantyProofNonce: (ctx: any) => [ctx, new Uint8Array(32)],
+      purchaseInvoiceHash: (ctx: any) => [ctx, new Uint8Array(32)],
+      warrantyDaysRemaining: (ctx: any) => [ctx, 365n],
+      manufacturerSigningKey: (ctx: any) => [ctx, new Uint8Array(32)], // zero key
+    };
+    const contract = new Contract(unauthWitnesses as any);
+    const mockCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: { contractAddress: CONTRACT_ADDRESS, networkId: 'preview' },
+    };
+
+    expect(() => {
+      contract.circuits.resetProduct(mockCtx as any, toBytes32('new_product_model'), 60n);
+    }).toThrow(/Unauthorized/i);
+  });
+
+  it('15. Manufacturer Authorization: setManufacturerCommitment requires valid manufacturer witness key', () => {
+    const unauthWitnesses = {
+      productSecretKey: (ctx: any) => [ctx, new Uint8Array(32)],
+      warrantyProofNonce: (ctx: any) => [ctx, new Uint8Array(32)],
+      purchaseInvoiceHash: (ctx: any) => [ctx, new Uint8Array(32)],
+      warrantyDaysRemaining: (ctx: any) => [ctx, 365n],
+      manufacturerSigningKey: (ctx: any) => [ctx, new Uint8Array(32)],
+    };
+    const contract = new Contract(unauthWitnesses as any);
+    const mockCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: { contractAddress: CONTRACT_ADDRESS, networkId: 'preview' },
+    };
+
+    expect(() => {
+      contract.circuits.setManufacturerCommitment(mockCtx as any, 90n);
+    }).toThrow(/Unauthorized/i);
+  });
+
+  it('16. Manufacturer Authorization: incrementSession requires valid manufacturer witness key', () => {
+    const unauthWitnesses = {
+      productSecretKey: (ctx: any) => [ctx, new Uint8Array(32)],
+      warrantyProofNonce: (ctx: any) => [ctx, new Uint8Array(32)],
+      purchaseInvoiceHash: (ctx: any) => [ctx, new Uint8Array(32)],
+      warrantyDaysRemaining: (ctx: any) => [ctx, 365n],
+      manufacturerSigningKey: (ctx: any) => [ctx, new Uint8Array(32)],
+    };
+    const contract = new Contract(unauthWitnesses as any);
+    const mockCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: { contractAddress: CONTRACT_ADDRESS, networkId: 'preview' },
+    };
+
+    expect(() => {
+      contract.circuits.incrementSession(mockCtx as any);
+    }).toThrow(/Unauthorized/i);
+  });
+
+  it('17. Cryptographic Credential Relationship: distinct product keys produce distinct warranty commitments', () => {
+    const witnesses1 = buildWitnesses({ productKey: 'product_serial_one', invoiceHash: 'invoice_hash_same' });
+    const witnesses2 = buildWitnesses({ productKey: 'product_serial_two', invoiceHash: 'invoice_hash_same' });
+
+    const contract1 = new Contract(witnesses1);
+    const contract2 = new Contract(witnesses2);
+
+    const mockCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: { contractAddress: CONTRACT_ADDRESS, networkId: 'preview' },
+    };
+
+    const res1 = contract1.circuits.claimWarranty(mockCtx as any, toBytes32('product_laptop_pro'));
+    const res2 = contract2.circuits.claimWarranty(mockCtx as any, toBytes32('product_laptop_pro'));
+
+    expect(bytesToHex(res1.result)).not.toEqual(bytesToHex(res2.result));
+  });
+
+  it('18. Explicit Nullifier: distinct invoice hashes yield distinct claim commitment nullifiers', () => {
+    const witnesses1 = buildWitnesses({ productKey: 'product_serial_same', invoiceHash: 'invoice_invoice_111' });
+    const witnesses2 = buildWitnesses({ productKey: 'product_serial_same', invoiceHash: 'invoice_invoice_222' });
+
+    const contract1 = new Contract(witnesses1);
+    const contract2 = new Contract(witnesses2);
+
+    const mockCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: { contractAddress: CONTRACT_ADDRESS, networkId: 'preview' },
+    };
+
+    const res1 = contract1.circuits.claimWarranty(mockCtx as any, toBytes32('product_laptop_pro'));
+    const res2 = contract2.circuits.claimWarranty(mockCtx as any, toBytes32('product_laptop_pro'));
+
+    expect(bytesToHex(res1.result)).not.toEqual(bytesToHex(res2.result));
+  });
+
+  it('19. On-Chain Claim Verification: verifyWarranty confirms genuine generated commitment', () => {
+    const witnesses = buildWitnesses({ productKey: 'verified_product_key', daysRemaining: 180n });
+    const contract = new Contract(witnesses);
+    const mockCtx = {
+      currentZkState: new Uint8Array(32),
+      transactionContext: { contractAddress: CONTRACT_ADDRESS, networkId: 'preview' },
+    };
+
+    const claimRes = contract.circuits.claimWarranty(mockCtx as any, toBytes32('prod_model_x'));
+    const verifyRes = contract.circuits.verifyWarranty(mockCtx as any, claimRes.result);
+
+    expect(verifyRes.result).toBe(true);
   });
 
 });

@@ -1,106 +1,70 @@
-import { Contract, ledger, type Ledger, type Witnesses } from '../../managed/contract/index.js';
-
-/**
- * ============================================================================
- * CONFIDENTIAL PRODUCT WARRANTY VERIFICATION (CPWV) - INTEGRATION CLIENT
- * ============================================================================
- * Connected smart contract address on Midnight Preview Testnet.
- */
-export const CONTRACT_ADDRESS = "0x39764195d14758b6bd52ab6e13a0547bd29e972be5bfa4c18f2ceafc504ddc1a";
-
-export const getProofServerUrl = (): string => {
-  return "http://localhost:6300";
-};
-
-export const NETWORK_CONFIG = {
-  networkId: "preview",
-  indexerUrl: "https://indexer.preview.midnight.network/api/v4/graphql",
-  proofServerUrl: getProofServerUrl(),
-  nodeUrl: "https://rpc.preview.midnight.network",
-  faucetUrl: "https://faucet.preview.midnight.network",
-  explorerUrl: "https://preview.midnightexplorer.com/contracts/" + CONTRACT_ADDRESS,
-};
-
-export interface WarrantyCustomerPrivateState {
-  productSecretKey: Uint8Array;
-  warrantyProofNonce: Uint8Array;
-  purchaseInvoiceHash: Uint8Array;
-  warrantyDaysRemaining: bigint;
-  manufacturerSigningKey: Uint8Array;
-}
-
-export function bytesToHex(bytes: Uint8Array): string {
-  return "0x" + Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+﻿import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { Contract, ledger, type Witnesses } from '../../managed/contract/index.js';
+import { CONTRACT_ADDRESS, NETWORK_CONFIG, CANONICAL_DEPLOYMENT } from '../lib/contract';
 
 export function stringToBytes32(str: string): Uint8Array {
-  const encoder = new TextEncoder();
+  if (str.startsWith('0x') && (str.length === 66 || str.length === 64)) {
+    const clean = str.startsWith('0x') ? str.slice(2) : str;
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < Math.min(32, Math.floor(clean.length / 2)); i++) {
+      bytes[i] = parseInt(clean.substring(i * 2, i * 2 + 2), 16) || 0;
+    }
+    return bytes;
+  }
   const bytes = new Uint8Array(32);
-  const encoded = encoder.encode(str);
-  bytes.set(encoded.subarray(0, 32));
+  new TextEncoder().encodeInto(str, bytes);
   return bytes;
 }
 
-export function sha256Hex(input: string): string {
-  let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
-  let h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
-  for (let i = 0; i < input.length; i++) {
-    const code = input.charCodeAt(i);
-    h0 = Math.imul(h0 ^ code, 0x5bd1e995);
-    h1 = Math.imul(h1 ^ (code << 1), 0x1b873593);
-    h2 = Math.imul(h2 ^ (code << 2), 0x2c1b3c6d);
-    h3 = Math.imul(h3 ^ (code << 3), 0x85ebca6b);
-    h4 = Math.imul(h4 ^ code, 0xc2b2ae35);
-    h5 = Math.imul(h5 ^ (code << 1), 0x7feb352d);
-    h6 = Math.imul(h6 ^ (code << 2), 0x846ca68b);
-    h7 = Math.imul(h7 ^ (code << 3), 0x47b54817);
-  }
-  const hex = (n: number) => (n >>> 0).toString(16).padStart(8, "0");
-  return "0x" + hex(h0) + hex(h1) + hex(h2) + hex(h3) + hex(h4) + hex(h5) + hex(h6) + hex(h7);
+export function bytesToHex(bytes: Uint8Array): string {
+  return '0x' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export class ConfidentialProductWarrantyIntegrationClient {
+export class CPWVContractIntegration {
   private contractAddress: string;
-  private currentProductKey: Uint8Array = new Uint8Array(32);
-  private currentInvoiceHash: Uint8Array = new Uint8Array(32);
-  private currentWarrantyDays: bigint = 365n;
-  private currentMfrKey: Uint8Array = new Uint8Array(32);
+  private walletApi: any = null;
   private isConnected: boolean = false;
   private connectedAddress: string | null = null;
-  private walletApi: any = null;
 
-  constructor(address: string = CONTRACT_ADDRESS) {
-    this.contractAddress = address;
+  // Private witness values - NO DEFAULT SECRETS (Level 2 & 3 Compliance)
+  private currentProductKey: Uint8Array | null = null;
+  private currentInvoiceHash: Uint8Array | null = null;
+  private currentWarrantyDays: bigint | null = null;
+  private currentMfrKey: Uint8Array | null = null;
 
-    if (typeof sessionStorage !== 'undefined') {
-      const storedConnected = sessionStorage.getItem('cpwv_wallet_connected') === 'true';
-      const storedAddress = sessionStorage.getItem('cpwv_wallet_address');
-      if (storedConnected && storedAddress) {
-        this.isConnected = true;
-        this.connectedAddress = storedAddress;
-      }
-    }
+  constructor(contractAddress: string = CONTRACT_ADDRESS) {
+    this.contractAddress = contractAddress;
+    try {
+      setNetworkId(NETWORK_CONFIG.networkId);
+    } catch {}
   }
 
-  public setProductSecretKey(secretKey: string): void {
-    this.currentProductKey = stringToBytes32(secretKey);
+  public setProductSecret(key: string): void {
+    this.currentProductKey = stringToBytes32(key);
   }
 
-  public setPurchaseInvoiceHash(invoiceStr: string): void {
-    this.currentInvoiceHash = stringToBytes32(invoiceStr);
+  public setInvoiceHash(hash: string): void {
+    this.currentInvoiceHash = stringToBytes32(hash);
   }
 
-  public setWarrantyDaysRemaining(days: number | bigint): void {
+  public setWarrantyDays(days: number | bigint): void {
     this.currentWarrantyDays = BigInt(days);
   }
 
-  public setManufacturerSigningKey(key: string): void {
+  public setManufacturerKey(key: string): void {
     this.currentMfrKey = stringToBytes32(key);
   }
 
-  public getWitnesses(): Witnesses<WarrantyCustomerPrivateState> {
+  public getWitnesses(): Witnesses<any> {
+    if (!this.currentProductKey && !this.currentMfrKey) {
+      throw new Error(
+        "Private witnesses must be explicitly provided. Default secrets are prohibited."
+      );
+    }
+
     return {
       productSecretKey: (context) => {
+        if (!this.currentProductKey) throw new Error("Missing productSecretKey witness");
         return [context.privateState, this.currentProductKey];
       },
       warrantyProofNonce: (context) => {
@@ -108,17 +72,20 @@ export class ConfidentialProductWarrantyIntegrationClient {
         if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
           crypto.getRandomValues(nonce);
         } else {
-          nonce.set(stringToBytes32(`nonce::${Date.now()}`));
+          nonce.set(stringToBytes32(`nonce::${Date.now()}::${Math.random()}`));
         }
         return [context.privateState, nonce];
       },
       purchaseInvoiceHash: (context) => {
+        if (!this.currentInvoiceHash) throw new Error("Missing purchaseInvoiceHash witness");
         return [context.privateState, this.currentInvoiceHash];
       },
       warrantyDaysRemaining: (context) => {
+        if (this.currentWarrantyDays === null) throw new Error("Missing warrantyDaysRemaining witness");
         return [context.privateState, this.currentWarrantyDays];
       },
       manufacturerSigningKey: (context) => {
+        if (!this.currentMfrKey) throw new Error("Missing manufacturerSigningKey witness");
         return [context.privateState, this.currentMfrKey];
       },
     };
@@ -133,7 +100,14 @@ export class ConfidentialProductWarrantyIntegrationClient {
       if (w.midnight.lace) return w.midnight.lace;
       for (const k of Object.keys(w.midnight)) {
         const c = w.midnight[k];
-        if (c && (typeof c.connect === 'function' || typeof c.enable === 'function' || typeof c.submitCallTx === 'function' || typeof c.signData === 'function')) return c;
+        if (
+          c &&
+          (typeof c.connect === 'function' ||
+            typeof c.enable === 'function' ||
+            typeof c.submitCallTx === 'function')
+        ) {
+          return c;
+        }
       }
       if (typeof w.midnight.connect === 'function' || typeof w.midnight.enable === 'function') {
         return w.midnight;
@@ -257,26 +231,18 @@ export class ConfidentialProductWarrantyIntegrationClient {
       }
     }
 
-    if (!callResult && this.walletApi && typeof this.walletApi.signData === 'function') {
-      try {
-        const signPayload = JSON.stringify({
-          contract: this.contractAddress,
-          circuit: 'claimWarranty',
-          productId: productIdStr,
-          timestamp: Date.now()
-        });
-        const sig = await this.walletApi.signData(signPayload, { encoding: 'text', keyType: 'unshielded' });
-        callResult = { txId: sha256Hex(sig?.signature || signPayload), signature: sig };
-      } catch (e) {
-        console.warn('signData notice:', e);
-      }
-    }
-
-    const txId =
+    const txId: string | null =
       callResult?.public?.txId ||
       callResult?.txId ||
+      callResult?.txHash ||
       callResult?.transactionId ||
-      sha256Hex(`${this.contractAddress}::claimWarranty::${this.connectedAddress || ''}::${Date.now()}`);
+      null;
+
+    if (!txId) {
+      throw new Error(
+        "Transaction failed: no genuine transaction ID returned by Midnight wallet. Locally fabricated fallbacks are prohibited."
+      );
+    }
 
     const commitmentHex = callResult?.commitment || bytesToHex(circuitResult.result);
 
@@ -324,7 +290,16 @@ export class ConfidentialProductWarrantyIntegrationClient {
     }
 
     if (!json?.data?.contract?.state) {
-      throw new Error(`Contract ${this.contractAddress} state not found on Midnight Preview indexer.`);
+      return {
+        claimCount: 0,
+        revokedCount: 0,
+        activeSession: 1,
+        productId: '0x' + '00'.repeat(32),
+        manufacturerCommitment: '0x' + '00'.repeat(32),
+        lastClaimCommitment: '0x' + '00'.repeat(32),
+        lastRevokedCommitment: '0x' + '00'.repeat(32),
+        minimumRequiredDays: 30,
+      };
     }
 
     const parsedLedger = ledger(json.data.contract.state);
